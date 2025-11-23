@@ -12,14 +12,23 @@ jobs:
     steps:
       - name: Trigger Scraper
         run: |
+          # Debug: Check if variable exists
+          echo "🔍 Checking for SCRAPER_URL variable..."
+          echo "Variable value length: ${#{{ vars.SCRAPER_URL }}}"
+          
           # Construct URL - handle both with and without https://
           URL="${{ vars.SCRAPER_URL }}"
           
-          # Debug: Show what we received
-          echo "🔍 SCRAPER_URL variable: ${URL}"
+          # Debug: Show what we received (with quotes to see whitespace)
+          echo "🔍 SCRAPER_URL variable (raw): '${URL}'"
+          echo "🔍 SCRAPER_URL variable length: ${#URL} characters"
           
           if [[ -z "$URL" ]]; then
             echo "❌ ERROR: SCRAPER_URL variable is empty or not set!"
+            echo "💡 Make sure you:"
+            echo "   1. Go to Settings → Secrets and variables → Actions → Variables tab"
+            echo "   2. Created a REPOSITORY variable (not environment variable) named SCRAPER_URL"
+            echo "   3. Set the value to: vuln-hub-blue.vercel.app (no https://)"
             exit 1
           fi
           
@@ -32,51 +41,71 @@ jobs:
             URL="https://$URL"
           fi
           
+          echo "✅ Extracted domain: ${DOMAIN}"
           echo "✅ Full URL: ${URL}/api/cron/scraper"
-          echo "🔍 Testing DNS resolution for: ${DOMAIN}"
           
-          # Test DNS resolution
-          if ! host "${DOMAIN}" > /dev/null 2>&1; then
+          # Test DNS resolution with multiple methods
+          echo "🔍 Testing DNS resolution for: ${DOMAIN}"
+          echo "--- Using 'host' command ---"
+          host "${DOMAIN}" || echo "host command failed"
+          echo "--- Using 'nslookup' command ---"
+          nslookup "${DOMAIN}" || echo "nslookup command failed"
+          echo "--- Using 'dig' command ---"
+          dig "${DOMAIN}" +short || echo "dig command failed"
+          
+          # Try to resolve
+          if ! getent hosts "${DOMAIN}" > /dev/null 2>&1; then
             echo "❌ DNS resolution failed for ${DOMAIN}"
             echo "💡 This usually means:"
-            echo "   1. DNS hasn't fully propagated yet (can take 24-48 hours)"
-            echo "   2. Domain isn't pointing to Vercel correctly"
-            echo "   3. Domain is incorrect in SCRAPER_URL variable"
+            echo "   1. Domain is incorrect: '${DOMAIN}'"
+            echo "   2. Network issue from GitHub Actions"
             echo ""
-            echo "🔍 Trying alternative DNS lookup..."
-            nslookup "${DOMAIN}" || true
-            exit 1
+            echo "🔍 Attempting curl anyway to see detailed error..."
+          else
+            echo "✅ DNS resolution successful"
           fi
-          
-          echo "✅ DNS resolution successful"
           
           # Make the request with error handling
           echo "📡 Making request to scraper endpoint..."
-          response=$(curl -v -X POST \
+          echo "📡 URL: ${URL}/api/cron/scraper"
+          
+          set +e  # Don't exit on error immediately
+          response=$(curl -X POST \
             -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
             -H "Content-Type: application/json" \
             -w "\nHTTP_CODE:%{http_code}" \
-            -s \
-            "${URL}/api/cron/scraper" 2>&1) || {
-            EXIT_CODE=$?
-            echo "❌ curl failed with exit code: $EXIT_CODE"
-            echo "Response output:"
+            --connect-timeout 10 \
+            --max-time 30 \
+            -v \
+            "${URL}/api/cron/scraper" 2>&1)
+          CURL_EXIT=$?
+          set -e
+          
+          if [ $CURL_EXIT -ne 0 ]; then
+            echo "❌ curl failed with exit code: $CURL_EXIT"
+            echo "Full curl output:"
             echo "$response"
             exit 1
-          }
+          fi
           
-          # Extract HTTP code and body
-          http_code=$(echo "$response" | grep -o "HTTP_CODE:[0-9]*" | cut -d: -f2)
-          body=$(echo "$response" | sed '/HTTP_CODE:/d')
+          # Extract HTTP code and body (curl verbose output is on stderr, response on stdout)
+          http_code=$(echo "$response" | grep -o "HTTP_CODE:[0-9]*" | cut -d: -f2 || echo "000")
+          body=$(echo "$response" | grep -v "^<" | grep -v "^>" | grep -v "HTTP_CODE:" | tail -n +1)
           
-          echo "Response:"
+          echo ""
+          echo "=== Response Summary ==="
+          echo "HTTP Code: ${http_code}"
+          echo "Response Body:"
           echo "$body"
+          echo "========================"
           
           # Check if request was successful
           if [ "$http_code" -ge 200 ] && [ "$http_code" -lt 300 ]; then
             echo "✅ Scraper triggered successfully (HTTP $http_code)"
           else
             echo "❌ Scraper failed with HTTP $http_code"
+            echo "Full response:"
+            echo "$response"
             exit 1
           fi
 
