@@ -26,8 +26,14 @@ export async function POST(_request: Request) {
     }
 
     // Check authorization
-    if (authHeader !== `Bearer ${cronSecret}`) {
-      console.warn('Unauthorized cron attempt')
+    const expectedAuth = `Bearer ${cronSecret}`
+    if (authHeader !== expectedAuth) {
+      console.warn('Unauthorized cron attempt', {
+        authHeaderLength: authHeader?.length ?? 0,
+        expectedLength: expectedAuth.length,
+        authHeaderPrefix: authHeader?.substring(0, 10) ?? 'null',
+        expectedPrefix: expectedAuth.substring(0, 10),
+      })
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
