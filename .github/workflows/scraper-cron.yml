@@ -12,8 +12,37 @@ jobs:
     steps:
       - name: Trigger Scraper
         run: |
-          curl -X POST \
+          # Construct URL - handle both with and without https://
+          URL="${{ secrets.SCRAPER_URL }}"
+          if [[ ! "$URL" =~ ^https?:// ]]; then
+            URL="https://$URL"
+          fi
+          
+          echo "Calling: ${URL}/api/cron/scraper"
+          
+          # Make the request with error handling
+          response=$(curl -X POST \
             -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
             -H "Content-Type: application/json" \
-            https://${{ secrets.SCRAPER_URL }}/api/cron/scraper
+            -w "\nHTTP_CODE:%{http_code}" \
+            -s \
+            "${URL}/api/cron/scraper") || {
+            echo "❌ curl failed with exit code: $?"
+            exit 1
+          }
+          
+          # Extract HTTP code and body
+          http_code=$(echo "$response" | grep -o "HTTP_CODE:[0-9]*" | cut -d: -f2)
+          body=$(echo "$response" | sed '/HTTP_CODE:/d')
+          
+          echo "Response:"
+          echo "$body"
+          
+          # Check if request was successful
+          if [ "$http_code" -ge 200 ] && [ "$http_code" -lt 300 ]; then
+            echo "✅ Scraper triggered successfully (HTTP $http_code)"
+          else
+            echo "❌ Scraper failed with HTTP $http_code"
+            exit 1
+          fi
 
