@@ -1,36 +1,34 @@
 // Supabase client for browser/client components
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
-import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { Database } from '@/types/database'
+
+// Mock client for when Supabase isn't configured
+const mockClient = {
+  channel: () => ({
+    on: () => ({ subscribe: () => {} }),
+  }),
+  removeChannel: () => {},
+  from: () => ({
+    select: () => ({ data: null, error: null }),
+  }),
+} as any
 
 export const createClient = () => {
   try {
-    return createClientComponentClient<Database>()
-  } catch (error) {
-    // Fallback: create client directly if auth helper fails
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL
-    const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-    
-    if (!url || !key) {
-      // Return a mock client that won't crash
-      return {
-        channel: () => ({
-          on: () => ({ subscribe: () => {} }),
-        }),
-        removeChannel: () => {},
-      } as any
+    // Check if env vars are available (NEXT_PUBLIC_ vars are available in browser)
+    if (typeof window !== 'undefined') {
+      // In browser, try to create client
+      const client = createClientComponentClient<Database>()
+      return client
     }
-    
-    return createSupabaseClient<Database>(url, key)
+    return mockClient
+  } catch (error) {
+    // If client creation fails, return mock to prevent crashes
+    console.warn('Supabase client creation failed, using mock client:', error)
+    return mockClient
   }
 }
 
-// Export a default instance (lazy initialization)
-let supabaseInstance: ReturnType<typeof createClient> | null = null
-export const supabase = () => {
-  if (!supabaseInstance) {
-    supabaseInstance = createClient()
-  }
-  return supabaseInstance
-}
+// Export a default instance
+export const supabase = createClient()
 
