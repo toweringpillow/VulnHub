@@ -1,6 +1,7 @@
 // Supabase client for server components and API routes
 import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
+import { createClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
 import { Database } from '@/types/database'
 
@@ -10,7 +11,6 @@ export const createServerClient = () => {
   } catch (error) {
     console.error('Error creating Supabase server client:', error)
     // Fallback: create client directly if cookies() fails
-    const { createClient } = require('@supabase/supabase-js')
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
     const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
     if (!url || !key) {
@@ -26,7 +26,6 @@ export const createRouteClient = () => {
   } catch (error) {
     console.error('Error creating Supabase route client:', error)
     // Fallback: create client directly if cookies() fails
-    const { createClient } = require('@supabase/supabase-js')
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
     const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
     if (!url || !key) {
