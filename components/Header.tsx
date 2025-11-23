@@ -21,10 +21,6 @@ export default function Header() {
               fill
               className="object-contain"
               priority
-              onError={(e) => {
-                // Fallback if logo doesn't exist
-                e.currentTarget.style.display = 'none'
-              }}
             />
           </div>
           
