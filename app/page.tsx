@@ -6,6 +6,7 @@ import SearchBar from '@/components/SearchBar'
 import ArticleCard from '@/components/ArticleCard'
 import { DEFAULT_PAGE_SIZE } from '@/lib/constants'
 
+export const dynamic = 'force-dynamic'
 export const revalidate = 300 // Revalidate every 5 minutes
 
 async function getArticles(page: number = 1) {
