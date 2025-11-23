@@ -14,11 +14,21 @@ jobs:
         run: |
           # Construct URL - handle both with and without https://
           URL="${{ secrets.SCRAPER_URL }}"
+          
+          # Debug: Show what we received (without exposing full secret)
+          echo "🔍 SCRAPER_URL secret length: ${#URL} characters"
+          echo "🔍 SCRAPER_URL starts with: ${URL:0:10}..."
+          
+          if [[ -z "$URL" ]]; then
+            echo "❌ ERROR: SCRAPER_URL secret is empty or not set!"
+            exit 1
+          fi
+          
           if [[ ! "$URL" =~ ^https?:// ]]; then
             URL="https://$URL"
           fi
           
-          echo "Calling: ${URL}/api/cron/scraper"
+          echo "✅ Full URL: ${URL}/api/cron/scraper"
           
           # Make the request with error handling
           response=$(curl -X POST \
