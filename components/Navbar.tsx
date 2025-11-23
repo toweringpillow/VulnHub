@@ -15,6 +15,7 @@ import {
   X 
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
+import VLogo from './VLogo'
 import { cn } from '@/lib/utils'
 
 export default function Navbar() {
