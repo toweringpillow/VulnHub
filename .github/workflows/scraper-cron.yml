@@ -76,7 +76,7 @@ jobs:
             -H "Content-Type: application/json" \
             -w "\nHTTP_CODE:%{http_code}" \
             --connect-timeout 10 \
-            --max-time 30 \
+            --max-time 90 \
             -v \
             "${URL}/api/cron/scraper" 2>&1)
           CURL_EXIT=$?

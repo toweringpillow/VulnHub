@@ -3,7 +3,7 @@ import { headers } from 'next/headers'
 import { scrapeArticles } from '@/lib/scraper'
 
 export const runtime = 'nodejs'
-export const maxDuration = 60 // 60 seconds timeout
+export const maxDuration = 120 // 120 seconds (2 minutes) timeout for scraping multiple feeds
 
 /**
  * Cron endpoint for RSS scraping
