@@ -27,7 +27,7 @@ jobs:
             echo "💡 Make sure you:"
             echo "   1. Go to Settings → Secrets and variables → Actions → Variables tab"
             echo "   2. Created a REPOSITORY variable (not environment variable) named SCRAPER_URL"
-            echo "   3. Set the value to: vuln-hub-blue.vercel.app (no https://)"
+            echo "   3. Set the value to: www.vulnerabilityhub.com (use www to avoid redirects)"
             exit 1
           fi
           
@@ -69,7 +69,9 @@ jobs:
           echo "📡 URL: ${URL}/api/cron/scraper"
           
           set +e  # Don't exit on error immediately
-          response=$(curl -L -X POST \
+          # Use --location-trusted to forward Authorization header on redirects
+          # (safe here since we control both domains)
+          response=$(curl --location-trusted -X POST \
             -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
             -H "Content-Type: application/json" \
             -w "\nHTTP_CODE:%{http_code}" \
