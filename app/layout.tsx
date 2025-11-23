@@ -3,6 +3,8 @@ import { Inter } from 'next/font/google'
 import './globals.css'
 import { SITE_NAME, SITE_DESCRIPTION, SITE_URL, ADSENSE_CLIENT_ID } from '@/lib/constants'
 import Script from 'next/script'
+import RealTimeUpdates from '@/components/RealTimeUpdates'
+import { Toaster } from 'react-hot-toast'
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
 
@@ -93,6 +95,14 @@ export default function RootLayout({
         />
       </head>
       <body className={`${inter.variable} font-sans antialiased`}>
+        <RealTimeUpdates />
+        <Toaster 
+          position="top-right"
+          toastOptions={{
+            className: 'bg-dark-800 text-foreground border border-dark-700',
+            duration: 5000,
+          }}
+        />
         {children}
       </body>
     </html>

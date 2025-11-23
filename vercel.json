@@ -1,14 +1,4 @@
 {
-  "crons": [
-    {
-      "path": "/api/cron/scraper",
-      "schedule": "0 0 * * *"
-    },
-    {
-      "path": "/api/cron/world-news",
-      "schedule": "0 1 * * *"
-    }
-  ],
   "headers": [
     {
       "source": "/(.*)",
