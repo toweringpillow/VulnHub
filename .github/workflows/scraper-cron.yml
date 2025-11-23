@@ -15,5 +15,5 @@ jobs:
           curl -X POST \
             -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
             -H "Content-Type: application/json" \
-            ${{ secrets.SCRAPER_URL }}/api/cron/scraper
+            https://${{ secrets.SCRAPER_URL }}/api/cron/scraper
 
