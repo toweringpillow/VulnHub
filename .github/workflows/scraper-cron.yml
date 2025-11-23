@@ -12,12 +12,11 @@ jobs:
     steps:
       - name: Trigger Scraper
         run: |
-          # Debug: Check if variable exists
-          echo "🔍 Checking for SCRAPER_URL variable..."
-          echo "Variable value length: ${#{{ vars.SCRAPER_URL }}}"
-          
           # Construct URL - handle both with and without https://
           URL="${{ vars.SCRAPER_URL }}"
+          
+          # Debug: Check if variable exists
+          echo "🔍 Checking for SCRAPER_URL variable..."
           
           # Debug: Show what we received (with quotes to see whitespace)
           echo "🔍 SCRAPER_URL variable (raw): '${URL}'"
