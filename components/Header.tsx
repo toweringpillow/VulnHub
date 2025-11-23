@@ -19,8 +19,8 @@ export default function Header() {
           </div>
           
           {/* Site Name */}
-          <h1 className="text-5xl md:text-6xl font-bold text-center">
-            <span className="bg-gradient-to-r from-primary-500 via-accent-500 to-primary-500 bg-clip-text text-transparent animate-flicker">
+          <h1 className="text-3xl md:text-4xl font-bold text-center">
+            <span className="text-gray-100">
               {SITE_NAME}
             </span>
           </h1>

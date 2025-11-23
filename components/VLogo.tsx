@@ -14,7 +14,7 @@ export default function VLogo({ size = 'md', className = '' }: VLogoProps) {
   }
 
   return (
-    <div className={`v-logo ${sizeClasses[size]} ${className}`}>
+    <div className={`v-logo v-logo-flicker ${sizeClasses[size]} ${className}`}>
       <div className="glow-effect"></div>
       <div className="v-shape">
         <div className="scanning-line"></div>

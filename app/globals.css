@@ -145,6 +145,10 @@
   display: inline-block;
 }
 
+.v-logo-flicker {
+  animation: v-flicker 6s ease-in-out infinite;
+}
+
 .v-shape {
   @apply relative w-full h-full;
   position: relative;
@@ -206,6 +210,101 @@
   50% {
     opacity: 0.6;
     transform: scale(1.1);
+  }
+}
+
+@keyframes v-flicker {
+  0%, 100% {
+    opacity: 1;
+    filter: brightness(1);
+  }
+  2% {
+    opacity: 0.98;
+    filter: brightness(0.98);
+  }
+  4% {
+    opacity: 1;
+    filter: brightness(1);
+  }
+  8% {
+    opacity: 0.97;
+    filter: brightness(0.97);
+  }
+  10% {
+    opacity: 1;
+    filter: brightness(1);
+  }
+  15% {
+    opacity: 0.99;
+    filter: brightness(0.99);
+  }
+  18% {
+    opacity: 1;
+    filter: brightness(1);
+  }
+  25% {
+    opacity: 0.96;
+    filter: brightness(0.96);
+  }
+  28% {
+    opacity: 1;
+    filter: brightness(1);
+  }
+  35% {
+    opacity: 0.98;
+    filter: brightness(0.98);
+  }
+  38% {
+    opacity: 1;
+    filter: brightness(1);
+  }
+  45% {
+    opacity: 0.97;
+    filter: brightness(0.97);
+  }
+  48% {
+    opacity: 1;
+    filter: brightness(1);
+  }
+  55% {
+    opacity: 0.99;
+    filter: brightness(0.99);
+  }
+  58% {
+    opacity: 1;
+    filter: brightness(1);
+  }
+  65% {
+    opacity: 0.98;
+    filter: brightness(0.98);
+  }
+  68% {
+    opacity: 1;
+    filter: brightness(1);
+  }
+  75% {
+    opacity: 0.97;
+    filter: brightness(0.97);
+  }
+  78% {
+    opacity: 1;
+    filter: brightness(1);
+  }
+  85% {
+    opacity: 0.99;
+    filter: brightness(0.99);
+  }
+  88% {
+    opacity: 1;
+    filter: brightness(1);
+  }
+  92% {
+    opacity: 0.98;
+    filter: brightness(0.98);
+  }
+  95% {
+    opacity: 1;
+    filter: brightness(1);
   }
 }
 
