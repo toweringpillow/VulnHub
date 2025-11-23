@@ -17,6 +17,12 @@
         }
       ]
     }
+  ],
+  "crons": [
+    {
+      "path": "/api/cron/scraper",
+      "schedule": "*/5 * * * *"
+    }
   ]
 }
 

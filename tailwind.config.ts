@@ -34,6 +34,18 @@ const config: Config = {
           800: '#2e4e4e',
           900: '#172727',
         },
+        orange: {
+          50: '#fff7ed',
+          100: '#ffedd5',
+          200: '#fed7aa',
+          300: '#fdba74',
+          400: '#fb923c',
+          500: '#f97316', // Subtle orange for binary bits
+          600: '#ea580c',
+          700: '#c2410c',
+          800: '#9a3412',
+          900: '#7c2d12',
+        },
         dark: {
           DEFAULT: '#1a1a1a',
           50: '#f5f5f5',
@@ -62,6 +74,7 @@ const config: Config = {
         'slide-down': 'slideDown 0.5s ease-out',
         'fade-in': 'fadeIn 0.5s ease-in',
         'ticker': 'ticker 30s linear infinite',
+        'flicker': 'flicker 8s ease-in-out infinite',
       },
       keyframes: {
         float: {
@@ -85,6 +98,31 @@ const config: Config = {
         ticker: {
           '0%': { transform: 'translateX(0%)' },
           '100%': { transform: 'translateX(-50%)' },
+        },
+        flicker: {
+          '0%, 100%': { opacity: '1' },
+          '2%': { opacity: '0.98' },
+          '4%': { opacity: '1' },
+          '8%': { opacity: '0.99' },
+          '10%': { opacity: '1' },
+          '15%': { opacity: '0.97' },
+          '18%': { opacity: '1' },
+          '25%': { opacity: '0.98' },
+          '28%': { opacity: '1' },
+          '35%': { opacity: '0.99' },
+          '38%': { opacity: '1' },
+          '45%': { opacity: '0.96' },
+          '48%': { opacity: '1' },
+          '55%': { opacity: '0.98' },
+          '58%': { opacity: '1' },
+          '65%': { opacity: '0.99' },
+          '68%': { opacity: '1' },
+          '75%': { opacity: '0.97' },
+          '78%': { opacity: '1' },
+          '85%': { opacity: '0.98' },
+          '88%': { opacity: '1' },
+          '92%': { opacity: '0.99' },
+          '95%': { opacity: '1' },
         },
       },
       backgroundImage: {

@@ -50,7 +50,7 @@
 @layer components {
   /* Binary header animation */
   .binary-bit {
-    @apply absolute text-accent-500/30 font-mono text-2xl pointer-events-none select-none;
+    @apply absolute text-orange-500/25 font-mono text-2xl pointer-events-none select-none;
     animation: float 8s ease-in-out infinite;
   }
   
