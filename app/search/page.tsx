@@ -5,6 +5,7 @@ import Footer from '@/components/Footer'
 import SearchBar from '@/components/SearchBar'
 import ArticleCard from '@/components/ArticleCard'
 import { DEFAULT_PAGE_SIZE } from '@/lib/constants'
+import { ArticleWithTags } from '@/types/database'
 
 export const revalidate = 300
 
@@ -73,7 +74,7 @@ export default async function SearchPage({
 
             {articles.length > 0 ? (
               <div className="space-y-6">
-                {articles.map((article) => (
+                {articles.map((article: ArticleWithTags) => (
                   <ArticleCard key={article.id} article={article} />
                 ))}
               </div>

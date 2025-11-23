@@ -2,6 +2,7 @@ import { MetadataRoute } from 'next'
 import { createServerClient } from '@/lib/supabase/server'
 import { SITE_URL } from '@/lib/constants'
 import { slugify } from '@/lib/utils'
+import { Article } from '@/types/database'
 
 // Mark as dynamic route
 export const dynamic = 'force-dynamic'
@@ -56,7 +57,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     .order('created_at', { ascending: false })
     .limit(1000) // Sitemap limit
 
-  const articlePages = (articles || []).map((article) => ({
+  const articlePages = (articles || []).map((article: Article) => ({
     url: `${SITE_URL}/article/${article.id}/${slugify(article.title)}`,
     lastModified: new Date(article.created_at),
     changeFrequency: 'monthly' as const,
