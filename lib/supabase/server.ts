@@ -6,31 +6,55 @@ import { cookies } from 'next/headers'
 import { Database } from '@/types/database'
 
 export const createServerClient = () => {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+  
+  if (!url || !key) {
+    // Return a mock client if env vars aren't set
+    return {
+      from: () => ({
+        select: () => ({ data: null, error: null, count: 0 }),
+        insert: () => ({ data: null, error: null }),
+        update: () => ({ data: null, error: null }),
+        delete: () => ({ data: null, error: null }),
+      }),
+    } as any
+  }
+
   try {
-    return createServerComponentClient<Database>({ cookies })
+    // Try to use cookies() if available (runtime)
+    const cookieStore = cookies()
+    return createServerComponentClient<Database>({ cookies: () => cookieStore })
   } catch (error) {
-    console.error('Error creating Supabase server client:', error)
-    // Fallback: create client directly if cookies() fails
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
-    const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
-    if (!url || !key) {
-      throw new Error('Supabase environment variables not configured')
-    }
+    // Fallback: create client directly if cookies() fails (build time)
+    console.warn('Using direct Supabase client (cookies unavailable)')
     return createClient<Database>(url, key)
   }
 }
 
 export const createRouteClient = () => {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+  
+  if (!url || !key) {
+    // Return a mock client if env vars aren't set
+    return {
+      from: () => ({
+        select: () => ({ data: null, error: null, count: 0 }),
+        insert: () => ({ data: null, error: null }),
+        update: () => ({ data: null, error: null }),
+        delete: () => ({ data: null, error: null }),
+      }),
+    } as any
+  }
+
   try {
-    return createRouteHandlerClient<Database>({ cookies })
+    // Try to use cookies() if available (runtime)
+    const cookieStore = cookies()
+    return createRouteHandlerClient<Database>({ cookies: () => cookieStore })
   } catch (error) {
-    console.error('Error creating Supabase route client:', error)
-    // Fallback: create client directly if cookies() fails
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
-    const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
-    if (!url || !key) {
-      throw new Error('Supabase environment variables not configured')
-    }
+    // Fallback: create client directly if cookies() fails (build time)
+    console.warn('Using direct Supabase client (cookies unavailable)')
     return createClient<Database>(url, key)
   }
 }

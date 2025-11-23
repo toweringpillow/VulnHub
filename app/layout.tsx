@@ -9,7 +9,7 @@ import { Toaster } from 'react-hot-toast'
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
 
 export const metadata: Metadata = {
-  metadataBase: SITE_URL ? new URL(SITE_URL) : undefined,
+  metadataBase: SITE_URL && SITE_URL.startsWith('http') ? new URL(SITE_URL) : undefined,
   title: {
     default: `${SITE_NAME} - AI-Powered Cybersecurity Intelligence`,
     template: `%s | ${SITE_NAME}`,
