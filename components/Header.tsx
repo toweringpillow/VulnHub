@@ -1,6 +1,6 @@
 import Link from 'next/link'
-import Image from 'next/image'
 import BinaryHeader from './BinaryHeader'
+import VLogo from './VLogo'
 import { SITE_NAME } from '@/lib/constants'
 
 export default function Header() {
@@ -14,15 +14,8 @@ export default function Header() {
           className="flex flex-col items-center space-y-4 no-underline group"
         >
           {/* Logo/Icon */}
-          <div className="relative w-24 h-24 transition-transform group-hover:scale-110 duration-300">
-            <Image
-              src="/images/logo.png"
-              alt={`${SITE_NAME} Logo`}
-              fill
-              className="object-contain"
-              priority
-              unoptimized
-            />
+          <div className="transition-transform group-hover:scale-110 duration-300">
+            <VLogo size="md" />
           </div>
           
           {/* Site Name */}

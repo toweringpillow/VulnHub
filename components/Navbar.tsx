@@ -56,7 +56,7 @@ export default function Navbar() {
             href="/" 
             className="flex items-center space-x-2 text-xl font-bold text-primary-500 hover:text-primary-400 transition-colors"
           >
-            <ShieldAlert className="w-6 h-6" />
+            <VLogo size="sm" />
             <span className="hidden sm:inline">VulnHub</span>
           </Link>
 
