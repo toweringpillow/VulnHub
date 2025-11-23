@@ -25,8 +25,8 @@ export default function Navbar() {
 
   useEffect(() => {
     // Check auth status
-    supabase.auth.getUser().then(({ data }) => {
-      setUser(data.user)
+    supabase.auth.getUser().then(({ data }: { data: { user: any } | null }) => {
+      setUser(data?.user || null)
     })
 
     // Listen for auth changes
