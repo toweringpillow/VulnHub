@@ -53,21 +53,29 @@ async function getArticles(page: number = 1) {
 export default async function HomePage({
   searchParams,
 }: {
-  searchParams: { page?: string }
+  searchParams: { page?: string } | Promise<{ page?: string }>
 }) {
-  const page = parseInt(searchParams.page || '1')
+  // Handle both sync and async searchParams (Next.js 15 compatibility)
+  const resolvedSearchParams = searchParams instanceof Promise 
+    ? await searchParams 
+    : searchParams
+  
+  const page = parseInt(resolvedSearchParams?.page || '1')
   let articles: any[] = []
   let total = 0
   let totalPages = 0
   
   try {
     const result = await getArticles(page)
-    articles = result.articles
-    total = result.total
+    articles = result.articles || []
+    total = result.total || 0
     totalPages = Math.ceil(total / DEFAULT_PAGE_SIZE)
   } catch (error) {
     console.error('Error in HomePage:', error)
     // Continue with empty state
+    articles = []
+    total = 0
+    totalPages = 0
   }
 
   return (
