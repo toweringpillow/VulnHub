@@ -8,19 +8,12 @@ GitHub Actions is free for public repositories and can run scheduled workflows.
 
 ### Setup Steps:
 
-1. **Find Your Vercel Deployment URL:**
-   - Go to [Vercel Dashboard](https://vercel.com/dashboard)
-   - Click on your project
-   - Look at the latest deployment - the URL is shown (e.g., `vuln-hub-blue.vercel.app`)
-   - Or check `Settings` → `Domains` for all URLs
-   - **Note:** Use the `.vercel.app` URL until your custom domain is configured
-
-2. **Add Secrets to GitHub Repository:**
+1. **Add Secrets to GitHub Repository:**
    - Go to your repo: `Settings` → `Secrets and variables` → `Actions`
    - Add these secrets:
      - `CRON_SECRET`: Your cron secret (same as Vercel env var)
-     - `SCRAPER_URL`: Your Vercel deployment URL (e.g., `https://vuln-hub-blue.vercel.app`)
-   - **Important:** Use your actual Vercel URL, not the custom domain (until DNS is configured)
+     - `SCRAPER_URL`: Your production URL (e.g., `https://vulnerabilityhub.com`)
+   - **Note:** Use your production domain once DNS is configured. For testing, use your Vercel preview URL.
 
 2. **Workflow File:**
    - The workflow file is already created at `.github/workflows/scraper-cron.yml`
@@ -42,7 +35,7 @@ A free external cron service that can call your API endpoint.
 
 2. **Create a new cron job:**
    - **Title:** VulnHub Scraper
-   - **Address:** `https://vulnerabilityhub.com/api/cron/scraper`
+   - **Address:** `https://vulnerabilityhub.com/api/cron/scraper` (production domain)
    - **Schedule:** Every 5 minutes (`*/5 * * * *`)
    - **Request Method:** POST
    - **Request Headers:**

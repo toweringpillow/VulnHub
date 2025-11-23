@@ -40,7 +40,7 @@
 - **AI**: OpenAI GPT-4o-mini
 - **Hosting**: Vercel
 - **RSS Parsing**: rss-parser
-- **Scraping**: Vercel Cron Jobs (every 15 minutes)
+- **Scraping**: GitHub Actions (every 5 minutes) - external cron service
 - **Real-time**: Supabase Realtime subscriptions
 
 ## 🚀 Quick Start
@@ -79,8 +79,11 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ## 📖 Documentation
 
-- **[Setup Guide](SETUP_GUIDE.md)**: Complete step-by-step setup instructions
-- **[Project Notes](PROJECT_NOTES.md)**: Technical architecture and LLM context (gitignored)
+- **[Domain Setup](DOMAIN_SETUP.md)**: Complete guide for pointing domain to Vercel
+- **[Development Workflow](DEV_WORKFLOW.md)**: How to use dev branch for testing
+- **[External Cron Setup](EXTERNAL_CRON_SETUP.md)**: Configure GitHub Actions for scraping
+- **[Test Scraper](TEST_SCRAPER.md)**: How to test the scraper endpoint
+- **[Real-Time Scraping Options](REALTIME_SCRAPING_OPTIONS.md)**: Options for more real-time updates
 - **[Environment Variables](.env.local.example)**: All required API keys and config
 
 ## 🔐 Environment Variables
@@ -138,7 +141,7 @@ VulnHub/
 
 ## 🔄 How It Works
 
-1. **Scraping**: Vercel cron job runs every 15 minutes
+1. **Scraping**: GitHub Actions cron runs every 5 minutes (external cron service)
 2. **Parsing**: RSS feeds parsed, articles extracted
 3. **AI Analysis**: OpenAI analyzes content, generates summary, extracts tags
 4. **Storage**: Articles saved to Supabase PostgreSQL
@@ -180,17 +183,43 @@ VulnHub works perfectly on:
 3. Add environment variables in Vercel dashboard
 4. Deploy!
 
-See [SETUP_GUIDE.md](SETUP_GUIDE.md) for detailed instructions.
+See [DOMAIN_SETUP.md](DOMAIN_SETUP.md) for detailed domain configuration instructions.
+
+### Branch Structure
+
+- **`main` branch** → Production (deploys to `vulnerabilityhub.com`)
+- **`dev` branch** → Development/Staging (deploys to preview URL for testing)
+
+### Development Workflow
+
+1. **Make changes on `dev` branch:**
+   ```bash
+   git checkout dev
+   # Make changes
+   git add .
+   git commit -m "Your changes"
+   git push origin dev
+   ```
+   - Vercel automatically creates a preview deployment
+   - Test on the preview URL before production
+
+2. **Deploy to production:**
+   ```bash
+   git checkout main
+   git merge dev
+   git push origin main
+   ```
+   - Automatically deploys to `vulnerabilityhub.com`
+
+See [DEV_WORKFLOW.md](DEV_WORKFLOW.md) for complete development workflow guide.
 
 ### DNS Configuration
 
-Point your domain to Vercel:
+Domain is configured to point to Vercel via nameservers:
+- **Production:** `vulnerabilityhub.com` → Vercel (via nameservers)
+- **Preview:** Automatic preview URLs for `dev` branch
 
-**Option 1: Nameservers**
-- Update nameservers to Vercel's (ns1.vercel-dns.com, ns2.vercel-dns.com)
-
-**Option 2: CNAME**
-- Add CNAME record: `@ → cname.vercel-dns.com`
+See [DOMAIN_SETUP.md](DOMAIN_SETUP.md) for detailed setup instructions.
 
 ## 📊 Usage & Costs
 

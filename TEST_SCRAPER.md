@@ -1,27 +1,31 @@
 # Testing the Scraper
 
-## Finding Your Vercel Deployment URL
+## Finding Your Deployment URL
 
-Your Vercel deployment URL is typically one of these formats:
+Your deployment URL depends on the environment:
 
-1. **Production URL:** `https://your-project-name.vercel.app`
-2. **Preview URL:** `https://your-project-name-git-main-your-username.vercel.app`
-3. **Custom Domain:** `https://vulnerabilityhub.com` (once DNS is configured)
+1. **Production URL:** `https://vulnerabilityhub.com` (custom domain - live)
+2. **Preview URL:** `https://your-project-name-git-dev-your-username.vercel.app` (for dev branch)
+3. **Vercel Default:** `https://your-project-name.vercel.app` (fallback)
 
 ### How to Find It:
 
+**For Production:**
+- Use: `https://vulnerabilityhub.com` (custom domain is live)
+
+**For Testing/Dev:**
 1. **Go to Vercel Dashboard:**
    - Visit [vercel.com/dashboard](https://vercel.com/dashboard)
-   - Click on your project (`vuln-hub` or similar)
+   - Click on your project
 
 2. **Check Deployments:**
    - Look at the latest deployment
-   - The URL is shown at the top (e.g., `vuln-hub-blue.vercel.app`)
+   - Preview deployments show the URL (e.g., `vuln-hub-git-dev-xxx.vercel.app`)
    - Or click "Visit" to see the full URL
 
 3. **Check Project Settings:**
    - Go to `Settings` → `Domains`
-   - You'll see all assigned domains/URLs
+   - You'll see production domain and preview URLs
 
 ## Testing the Scraper Manually
 
@@ -125,12 +129,14 @@ When the scraper runs successfully, you should see:
 
 Once you've confirmed the scraper works manually:
 
-1. **Get your Vercel URL** (from above steps)
+1. **Use your production URL:** `https://vulnerabilityhub.com`
 2. **Get your CRON_SECRET** (from Vercel environment variables)
 3. **Add GitHub Secrets:**
    - Go to GitHub repo → Settings → Secrets and variables → Actions
-   - Add `SCRAPER_URL`: Your Vercel URL (e.g., `https://vuln-hub-blue.vercel.app`)
+   - Add `SCRAPER_URL`: `https://vulnerabilityhub.com` (production domain)
    - Add `CRON_SECRET`: Your secret value
 
-The GitHub Actions workflow will then run automatically every 5 minutes.
+The GitHub Actions workflow will then run automatically every 5 minutes, calling your production API.
+
+**Note:** The scraper runs against production. If you want to test on dev branch, use the preview URL temporarily, but switch back to production URL for the cron job.
 
