@@ -1,5 +1,6 @@
 'use client'
 
+// Animated V logo component with glow and scanning line effects
 interface VLogoProps {
   size?: 'sm' | 'md' | 'lg'
   className?: string
