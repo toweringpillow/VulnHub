@@ -64,7 +64,7 @@ export default function RealTimeUpdates() {
       return () => {
         try {
           supabase.removeChannel(channel)
-        } catch (error) {
+        } catch (_error) {
           // Silently fail on cleanup
         }
       }
