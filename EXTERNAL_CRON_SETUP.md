@@ -8,11 +8,19 @@ GitHub Actions is free for public repositories and can run scheduled workflows.
 
 ### Setup Steps:
 
-1. **Add Secrets to GitHub Repository:**
+1. **Find Your Vercel Deployment URL:**
+   - Go to [Vercel Dashboard](https://vercel.com/dashboard)
+   - Click on your project
+   - Look at the latest deployment - the URL is shown (e.g., `vuln-hub-blue.vercel.app`)
+   - Or check `Settings` → `Domains` for all URLs
+   - **Note:** Use the `.vercel.app` URL until your custom domain is configured
+
+2. **Add Secrets to GitHub Repository:**
    - Go to your repo: `Settings` → `Secrets and variables` → `Actions`
    - Add these secrets:
      - `CRON_SECRET`: Your cron secret (same as Vercel env var)
-     - `SCRAPER_URL`: Your Vercel deployment URL (e.g., `https://vulnerabilityhub.com`)
+     - `SCRAPER_URL`: Your Vercel deployment URL (e.g., `https://vuln-hub-blue.vercel.app`)
+   - **Important:** Use your actual Vercel URL, not the custom domain (until DNS is configured)
 
 2. **Workflow File:**
    - The workflow file is already created at `.github/workflows/scraper-cron.yml`
