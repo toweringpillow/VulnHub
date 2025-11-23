@@ -37,7 +37,7 @@ export const metadata: Metadata = {
     address: false,
     telephone: false,
   },
-  openGraph: {
+  openGraph: SITE_URL ? {
     type: 'website',
     locale: 'en_US',
     url: SITE_URL,
@@ -52,13 +52,13 @@ export const metadata: Metadata = {
         alt: SITE_NAME,
       },
     ],
-  },
-  twitter: {
+  } : undefined,
+  twitter: SITE_URL ? {
     card: 'summary_large_image',
     title: SITE_NAME,
     description: SITE_DESCRIPTION,
     images: [`${SITE_URL}/og-image.png`],
-  },
+  } : undefined,
   robots: {
     index: true,
     follow: true,
@@ -97,14 +97,18 @@ export default function RootLayout({
         )}
       </head>
       <body className={`${inter.variable} font-sans antialiased`}>
-        <RealTimeUpdates />
-        <Toaster 
-          position="top-right"
-          toastOptions={{
-            className: 'bg-dark-800 text-gray-100 border border-dark-700',
-            duration: 5000,
-          }}
-        />
+        {typeof window !== 'undefined' && (
+          <>
+            <RealTimeUpdates />
+            <Toaster 
+              position="top-right"
+              toastOptions={{
+                className: 'bg-dark-800 text-gray-100 border border-dark-700',
+                duration: 5000,
+              }}
+            />
+          </>
+        )}
         {children}
       </body>
     </html>
