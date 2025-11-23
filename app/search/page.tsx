@@ -64,7 +64,7 @@ export default async function SearchPage({
           <>
             <div className="mb-6">
               <h2 className="text-2xl font-bold text-foreground mb-2">
-                Search Results for "{query}"
+                Search Results for &quot;{query}&quot;
               </h2>
               <p className="text-muted-foreground">
                 Found {total} {total === 1 ? 'result' : 'results'}

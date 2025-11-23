@@ -19,7 +19,7 @@ export default function NotFound() {
           </h1>
           
           <p className="text-lg text-muted-foreground mb-8">
-            The article you're looking for doesn't exist or has been removed.
+            The article you&apos;re looking for doesn&apos;t exist or has been removed.
           </p>
           
           <Link href="/" className="btn-primary inline-flex">

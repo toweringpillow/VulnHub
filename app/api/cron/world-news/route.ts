@@ -10,7 +10,7 @@ export const maxDuration = 30
  * Called by Vercel Cron every 6 hours
  * Protected by Authorization header
  */
-export async function POST(request: Request) {
+export async function POST(_request: Request) {
   try {
     // Verify cron secret
     const headersList = headers()

@@ -1,4 +1,3 @@
-import { Suspense } from 'react'
 import { createServerClient } from '@/lib/supabase/server'
 import Header from '@/components/Header'
 import Navbar from '@/components/Navbar'

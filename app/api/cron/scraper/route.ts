@@ -10,7 +10,7 @@ export const maxDuration = 60 // 60 seconds timeout
  * Called by Vercel Cron every 15 minutes
  * Protected by Authorization header
  */
-export async function POST(request: Request) {
+export async function POST(_request: Request) {
   try {
     // Verify cron secret
     const headersList = headers()
