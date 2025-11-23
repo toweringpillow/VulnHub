@@ -7,8 +7,8 @@ export const maxDuration = 60 // 60 seconds timeout
 
 /**
  * Cron endpoint for RSS scraping
- * Called by Vercel Cron every 15 minutes
- * Protected by Authorization header
+ * Called by external cron service (GitHub Actions, cron-job.org, etc.)
+ * Protected by Authorization header with CRON_SECRET
  */
 export async function POST(_request: Request) {
   try {
