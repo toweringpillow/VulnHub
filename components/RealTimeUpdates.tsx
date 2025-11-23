@@ -15,8 +15,8 @@ export default function RealTimeUpdates() {
     try {
       const supabase = createClient()
       
-      // Check if client was created successfully (will throw if env vars missing)
-      if (!supabase) {
+      // Check if client has required methods
+      if (!supabase || typeof supabase.channel !== 'function') {
         return
       }
 
