@@ -54,12 +54,12 @@ export default async function HomePage({
 }: {
   searchParams: { page?: string }
 }) {
+  const page = parseInt(searchParams.page || '1')
   let articles: any[] = []
   let total = 0
   let totalPages = 0
   
   try {
-    const page = parseInt(searchParams.page || '1')
     const result = await getArticles(page)
     articles = result.articles
     total = result.total
