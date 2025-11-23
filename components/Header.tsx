@@ -20,14 +20,14 @@ export default function Header() {
           
           {/* Site Name */}
           <h1 className="text-3xl md:text-4xl font-bold text-center">
-            <span className="text-gray-100">
+            <span className="text-orange-400">
               {SITE_NAME}
             </span>
           </h1>
           
           {/* Tagline */}
           <p className="text-xl md:text-2xl text-gray-400 text-center max-w-2xl">
-            AI-Powered Cybersecurity Intelligence
+            All Cybersecurity News as It Happens
           </p>
         </Link>
       </div>
