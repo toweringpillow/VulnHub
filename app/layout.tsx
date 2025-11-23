@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google'
 import './globals.css'
 import { SITE_NAME, SITE_DESCRIPTION, SITE_URL, ADSENSE_CLIENT_ID } from '@/lib/constants'
 import Script from 'next/script'
+import { Analytics } from '@vercel/analytics/react'
 import RealTimeUpdates from '@/components/RealTimeUpdates'
 import { Toaster } from 'react-hot-toast'
 
@@ -110,6 +111,7 @@ export default function RootLayout({
           }}
         />
         {children}
+        <Analytics />
       </body>
     </html>
   )

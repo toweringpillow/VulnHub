@@ -1,6 +1,6 @@
 import Link from 'next/link'
-import { SITE_NAME, GITHUB_URL } from '@/lib/constants'
-import { Github, Shield } from 'lucide-react'
+import { SITE_NAME } from '@/lib/constants'
+import { Shield } from 'lucide-react'
 
 export default function Footer() {
   const currentYear = new Date().getFullYear()
@@ -61,17 +61,6 @@ export default function Footer() {
                 <Link href="/terms" className="text-gray-400 hover:text-primary-500 transition-colors">
                   Terms of Service
                 </Link>
-              </li>
-              <li>
-                <a 
-                  href={GITHUB_URL} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="text-gray-400 hover:text-primary-500 transition-colors inline-flex items-center space-x-1"
-                >
-                  <Github className="w-4 h-4" />
-                  <span>GitHub</span>
-                </a>
               </li>
             </ul>
           </div>
