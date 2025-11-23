@@ -69,7 +69,7 @@ jobs:
           echo "📡 URL: ${URL}/api/cron/scraper"
           
           set +e  # Don't exit on error immediately
-          response=$(curl -X POST \
+          response=$(curl -L -X POST \
             -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
             -H "Content-Type: application/json" \
             -w "\nHTTP_CODE:%{http_code}" \
