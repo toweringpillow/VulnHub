@@ -1,0 +1,72 @@
+# Dependencies
+node_modules/
+/.pnp
+.pnp.js
+
+# Testing
+/coverage
+
+# Next.js
+/.next/
+/out/
+
+# Production
+/build
+
+# Misc
+.DS_Store
+*.pem
+
+# Debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Local env files
+.env
+.env*.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Vercel
+.vercel
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
+
+# Documentation & Notes (gitignored but essential for LLMs)
+PROJECT_NOTES.md
+DEVELOPMENT_LOG.md
+TODO.md
+.cursor/
+
+# IDE
+.vscode/
+.idea/
+
+# Backup files
+backup-*/
+*.bak
+*.backup
+*.old
+
+# Database dumps
+*.db
+*.db-*
+*.sql.gz
+
+# Logs
+*.log
+logs/
+
+# Python (from old version)
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+
