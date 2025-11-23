@@ -30,7 +30,7 @@ export default function RealTimeUpdates() {
             schema: 'public',
             table: 'articles',
           },
-          (payload) => {
+          (payload: { new: any }) => {
             const newArticle = payload.new as any
             
             // Show toast notification
