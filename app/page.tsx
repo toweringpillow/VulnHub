@@ -9,32 +9,38 @@ import { DEFAULT_PAGE_SIZE } from '@/lib/constants'
 export const revalidate = 300 // Revalidate every 5 minutes
 
 async function getArticles(page: number = 1) {
-  const supabase = createServerClient()
-  
-  const start = (page - 1) * DEFAULT_PAGE_SIZE
-  const end = start + DEFAULT_PAGE_SIZE - 1
+  try {
+    const supabase = createServerClient()
+    
+    const start = (page - 1) * DEFAULT_PAGE_SIZE
+    const end = start + DEFAULT_PAGE_SIZE - 1
 
-  const { data, error, count } = await supabase
-    .from('articles')
-    .select(`
-      *,
-      article_tags (
-        tag_id,
-        tags (
-          id,
-          name
+    const { data, error, count } = await supabase
+      .from('articles')
+      .select(`
+        *,
+        article_tags (
+          tag_id,
+          tags (
+            id,
+            name
+          )
         )
-      )
-    `, { count: 'exact' })
-    .order('published_date', { ascending: false })
-    .range(start, end)
+      `, { count: 'exact' })
+      .order('published_date', { ascending: false })
+      .range(start, end)
 
-  if (error) {
-    console.error('Error fetching articles:', error)
+    if (error) {
+      console.error('Error fetching articles:', error)
+      return { articles: [], total: 0 }
+    }
+
+    return { articles: data || [], total: count || 0 }
+  } catch (error) {
+    // Handle case where Supabase isn't configured yet
+    console.error('Error connecting to Supabase:', error)
     return { articles: [], total: 0 }
   }
-
-  return { articles: data || [], total: count || 0 }
 }
 
 export default async function HomePage({
@@ -55,10 +61,10 @@ export default async function HomePage({
         <SearchBar />
         
         <div className="mb-6">
-          <h2 className="text-2xl font-bold text-foreground mb-2">
+          <h2 className="text-2xl font-bold text-gray-100 mb-2">
             Latest Cybersecurity Threats
           </h2>
-          <p className="text-muted-foreground">
+          <p className="text-gray-400">
             Real-time threat intelligence from trusted sources, analyzed by AI
           </p>
         </div>
@@ -71,10 +77,10 @@ export default async function HomePage({
           </div>
         ) : (
           <div className="text-center py-16">
-            <p className="text-xl text-muted-foreground">
+            <p className="text-xl text-gray-400">
               No threats found. Check back soon!
             </p>
-            <p className="text-sm text-muted-foreground mt-2">
+            <p className="text-sm text-gray-500 mt-2">
               The scraper runs every 15 minutes to fetch the latest threats.
             </p>
           </div>
@@ -92,7 +98,7 @@ export default async function HomePage({
               </a>
             )}
             
-            <span className="text-muted-foreground">
+            <span className="text-gray-400">
               Page {page} of {totalPages}
             </span>
             

@@ -14,11 +14,11 @@ export default function NotFound() {
         <div className="max-w-2xl mx-auto text-center">
           <AlertCircle className="w-16 h-16 text-primary-500 mx-auto mb-6" />
           
-          <h1 className="text-4xl font-bold text-foreground mb-4">
+          <h1 className="text-4xl font-bold text-gray-100 mb-4">
             Article Not Found
           </h1>
           
-          <p className="text-lg text-muted-foreground mb-8">
+          <p className="text-lg text-gray-400 mb-8">
             The article you&apos;re looking for doesn&apos;t exist or has been removed.
           </p>
           

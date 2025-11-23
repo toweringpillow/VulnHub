@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server'
 import { createServerClient } from '@/lib/supabase/server'
 import { DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE } from '@/lib/constants'
 
+// Mark as dynamic route
+export const dynamic = 'force-dynamic'
+
 /**
  * GET /api/articles
  * Fetch articles with pagination and optional filters

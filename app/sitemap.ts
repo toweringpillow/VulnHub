@@ -3,6 +3,9 @@ import { createServerClient } from '@/lib/supabase/server'
 import { SITE_URL } from '@/lib/constants'
 import { slugify } from '@/lib/utils'
 
+// Mark as dynamic route
+export const dynamic = 'force-dynamic'
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const supabase = createServerClient()
   

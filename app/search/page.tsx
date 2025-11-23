@@ -63,10 +63,10 @@ export default async function SearchPage({
         {query ? (
           <>
             <div className="mb-6">
-              <h2 className="text-2xl font-bold text-foreground mb-2">
+              <h2 className="text-2xl font-bold text-gray-100 mb-2">
                 Search Results for &quot;{query}&quot;
               </h2>
-              <p className="text-muted-foreground">
+              <p className="text-gray-400">
                 Found {total} {total === 1 ? 'result' : 'results'}
               </p>
             </div>
@@ -79,10 +79,10 @@ export default async function SearchPage({
               </div>
             ) : (
               <div className="text-center py-16">
-                <p className="text-xl text-muted-foreground">
+                <p className="text-xl text-gray-400">
                   No threats found matching your search.
                 </p>
-                <p className="text-sm text-muted-foreground mt-2">
+                <p className="text-sm text-gray-500 mt-2">
                   Try different keywords or check back later.
                 </p>
               </div>
@@ -100,9 +100,9 @@ export default async function SearchPage({
                   </a>
                 )}
                 
-                <span className="text-muted-foreground">
-                  Page {page} of {totalPages}
-                </span>
+            <span className="text-gray-400">
+              Page {page} of {totalPages}
+            </span>
                 
                 {page < totalPages && (
                   <a
@@ -117,7 +117,7 @@ export default async function SearchPage({
           </>
         ) : (
           <div className="text-center py-16">
-            <p className="text-xl text-muted-foreground">
+            <p className="text-xl text-gray-400">
               Enter a search term to find threats.
             </p>
           </div>
