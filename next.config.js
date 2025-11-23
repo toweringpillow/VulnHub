@@ -1,6 +1,14 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  eslint: {
+    // Don't fail build on ESLint warnings (only errors)
+    ignoreDuringBuilds: false,
+  },
+  typescript: {
+    // Don't fail build on TypeScript errors (we'll fix them)
+    ignoreBuildErrors: false,
+  },
   images: {
     domains: [
       'vulnerabilityhub.com',
