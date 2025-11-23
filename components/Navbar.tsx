@@ -72,7 +72,7 @@ export default function Navbar() {
                     'flex items-center space-x-1 px-4 py-2 rounded-lg text-sm font-medium transition-colors',
                     isActive(item.href)
                       ? 'bg-primary-500/10 text-primary-500'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-dark-800'
+                      : 'text-gray-400 hover:text-gray-100 hover:bg-dark-800'
                   )}
                 >
                   <Icon className="w-4 h-4" />
@@ -92,7 +92,7 @@ export default function Navbar() {
                     'flex items-center space-x-1 px-4 py-2 rounded-lg text-sm font-medium transition-colors',
                     pathname === '/dashboard'
                       ? 'bg-primary-500/10 text-primary-500'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-dark-800'
+                      : 'text-gray-400 hover:text-gray-100 hover:bg-dark-800'
                   )}
                 >
                   <User className="w-4 h-4" />
@@ -103,7 +103,7 @@ export default function Navbar() {
                     await supabase.auth.signOut()
                     window.location.href = '/'
                   }}
-                  className="flex items-center space-x-1 px-4 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-dark-800 transition-colors"
+                  className="flex items-center space-x-1 px-4 py-2 rounded-lg text-sm font-medium text-gray-400 hover:text-gray-100 hover:bg-dark-800 transition-colors"
                 >
                   <LogOut className="w-4 h-4" />
                   <span>Logout</span>
@@ -113,7 +113,7 @@ export default function Navbar() {
               <>
                 <Link
                   href="/login"
-                  className="flex items-center space-x-1 px-4 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-dark-800 transition-colors"
+                  className="flex items-center space-x-1 px-4 py-2 rounded-lg text-sm font-medium text-gray-400 hover:text-gray-100 hover:bg-dark-800 transition-colors"
                 >
                   <LogIn className="w-4 h-4" />
                   <span>Login</span>
@@ -132,7 +132,7 @@ export default function Navbar() {
           {/* Mobile menu button */}
           <button
             onClick={() => setIsOpen(!isOpen)}
-            className="md:hidden p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-dark-800 transition-colors"
+            className="md:hidden p-2 rounded-lg text-gray-400 hover:text-gray-100 hover:bg-dark-800 transition-colors"
           >
             {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
@@ -152,7 +152,7 @@ export default function Navbar() {
                     'flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors',
                     isActive(item.href)
                       ? 'bg-primary-500/10 text-primary-500'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-dark-800'
+                      : 'text-gray-400 hover:text-gray-100 hover:bg-dark-800'
                   )}
                 >
                   <Icon className="w-4 h-4" />
@@ -167,7 +167,7 @@ export default function Navbar() {
                   <Link
                     href="/dashboard"
                     onClick={() => setIsOpen(false)}
-                    className="flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-dark-800 transition-colors"
+                    className="flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium text-gray-400 hover:text-gray-100 hover:bg-dark-800 transition-colors"
                   >
                     <User className="w-4 h-4" />
                     <span>Dashboard</span>
@@ -178,7 +178,7 @@ export default function Navbar() {
                       setIsOpen(false)
                       window.location.href = '/'
                     }}
-                    className="w-full flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-dark-800 transition-colors"
+                    className="w-full flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium text-gray-400 hover:text-gray-100 hover:bg-dark-800 transition-colors"
                   >
                     <LogOut className="w-4 h-4" />
                     <span>Logout</span>
@@ -189,7 +189,7 @@ export default function Navbar() {
                   <Link
                     href="/login"
                     onClick={() => setIsOpen(false)}
-                    className="flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-dark-800 transition-colors"
+                    className="flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium text-gray-400 hover:text-gray-100 hover:bg-dark-800 transition-colors"
                   >
                     <LogIn className="w-4 h-4" />
                     <span>Login</span>

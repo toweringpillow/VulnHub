@@ -17,12 +17,12 @@ export default function ArticleCard({ article }: ArticleCardProps) {
         <div className="flex-1">
           <Link
             href={`/article/${article.id}/${slugify(article.title)}`}
-            className="text-xl font-semibold text-foreground hover:text-primary-500 transition-colors line-clamp-2"
+            className="text-xl font-semibold text-gray-100 hover:text-primary-500 transition-colors line-clamp-2"
           >
             {article.title}
           </Link>
           {article.source && (
-            <p className="text-sm text-muted-foreground mt-1">{article.source}</p>
+            <p className="text-sm text-gray-400 mt-1">{article.source}</p>
           )}
         </div>
         
@@ -39,7 +39,7 @@ export default function ArticleCard({ article }: ArticleCardProps) {
       {/* AI Summary */}
       {article.ai_summary ? (
         <div className="space-y-3 mb-4">
-          <p className="text-foreground/90 leading-relaxed">
+          <p className="text-gray-100/90 leading-relaxed">
             {article.ai_summary}
           </p>
           
@@ -47,20 +47,20 @@ export default function ArticleCard({ article }: ArticleCardProps) {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
             {article.impact && (
               <div>
-                <span className="text-muted-foreground font-medium">Impact: </span>
-                <span className="text-foreground">{formatAIField(article.impact)}</span>
+                <span className="text-gray-400 font-medium">Impact: </span>
+                <span className="text-gray-100">{formatAIField(article.impact)}</span>
               </div>
             )}
             {article.remediation && (
               <div>
-                <span className="text-muted-foreground font-medium">Remediation: </span>
-                <span className="text-foreground">{formatAIField(article.remediation)}</span>
+                <span className="text-gray-400 font-medium">Remediation: </span>
+                <span className="text-gray-100">{formatAIField(article.remediation)}</span>
               </div>
             )}
           </div>
         </div>
       ) : (
-        <p className="text-muted-foreground italic mb-4">
+        <p className="text-gray-400 italic mb-4">
           AI summary not available yet. Check back soon or read the original article.
         </p>
       )}
@@ -85,7 +85,7 @@ export default function ArticleCard({ article }: ArticleCardProps) {
 
       {/* Footer */}
       <div className="flex items-center justify-between pt-4 border-t border-dark-700">
-        <div className="flex items-center space-x-1 text-sm text-muted-foreground">
+        <div className="flex items-center space-x-1 text-sm text-gray-400">
           <Clock className="w-4 h-4" />
           <time dateTime={article.published_date}>
             {formatRelativeTime(article.published_date)}

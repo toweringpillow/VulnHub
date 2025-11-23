@@ -35,7 +35,7 @@ export default function SearchBar() {
           aria-label="Search threats"
         />
         
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
         
         <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center space-x-2">
           {query && (
@@ -45,7 +45,7 @@ export default function SearchBar() {
               className="p-2 hover:bg-dark-700 rounded-lg transition-colors"
               aria-label="Clear search"
             >
-              <X className="w-4 h-4 text-muted-foreground" />
+              <X className="w-4 h-4 text-gray-400" />
             </button>
           )}
           

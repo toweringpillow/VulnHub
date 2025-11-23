@@ -99,7 +99,7 @@ export default function RootLayout({
         <Toaster 
           position="top-right"
           toastOptions={{
-            className: 'bg-dark-800 text-foreground border border-dark-700',
+            className: 'bg-dark-800 text-gray-100 border border-dark-700',
             duration: 5000,
           }}
         />
