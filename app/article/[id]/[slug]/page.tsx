@@ -87,7 +87,7 @@ export default async function ArticleDetailPage({ params }: PageProps) {
           {/* Back Link */}
           <Link
             href="/"
-            className="inline-flex items-center space-x-2 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6"
+            className="inline-flex items-center space-x-2 text-sm text-gray-400 hover:text-gray-100 transition-colors mb-6"
           >
             <ArrowLeft className="w-4 h-4" />
             <span>Back to all threats</span>
@@ -97,11 +97,11 @@ export default async function ArticleDetailPage({ params }: PageProps) {
           <article className="threat-card">
             <div className="flex items-start justify-between gap-4 mb-6">
               <div className="flex-1">
-                <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-3">
+                <h1 className="text-3xl md:text-4xl font-bold text-gray-100 mb-3">
                   {article.title}
                 </h1>
                 
-                <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
+                <div className="flex flex-wrap items-center gap-4 text-sm text-gray-400">
                   {article.source && (
                     <span className="font-medium">{article.source}</span>
                   )}
@@ -150,10 +150,10 @@ export default async function ArticleDetailPage({ params }: PageProps) {
             {article.ai_summary ? (
               <div className="space-y-6">
                 <div>
-                  <h2 className="text-xl font-semibold text-foreground mb-3">
+                  <h2 className="text-xl font-semibold text-gray-100 mb-3">
                     AI Summary
                   </h2>
-                  <p className="text-foreground/90 text-lg leading-relaxed">
+                  <p className="text-gray-200 text-lg leading-relaxed">
                     {article.ai_summary}
                   </p>
                 </div>
@@ -162,10 +162,10 @@ export default async function ArticleDetailPage({ params }: PageProps) {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {article.impact && (
                     <div>
-                      <h3 className="text-lg font-semibold text-foreground mb-2">
+                      <h3 className="text-lg font-semibold text-gray-100 mb-2">
                         Impact
                       </h3>
-                      <p className="text-foreground/80">
+                      <p className="text-gray-300">
                         {formatAIField(article.impact)}
                       </p>
                     </div>
@@ -173,10 +173,10 @@ export default async function ArticleDetailPage({ params }: PageProps) {
 
                   {article.in_wild && (
                     <div>
-                      <h3 className="text-lg font-semibold text-foreground mb-2">
+                      <h3 className="text-lg font-semibold text-gray-100 mb-2">
                         In the Wild
                       </h3>
-                      <p className="text-foreground/80">
+                      <p className="text-gray-300">
                         {article.in_wild}
                       </p>
                     </div>
@@ -184,10 +184,10 @@ export default async function ArticleDetailPage({ params }: PageProps) {
 
                   {article.age && (
                     <div>
-                      <h3 className="text-lg font-semibold text-foreground mb-2">
+                      <h3 className="text-lg font-semibold text-gray-100 mb-2">
                         Timeline
                       </h3>
-                      <p className="text-foreground/80">
+                      <p className="text-gray-300">
                         {article.age}
                       </p>
                     </div>
@@ -195,10 +195,10 @@ export default async function ArticleDetailPage({ params }: PageProps) {
 
                   {article.remediation && (
                     <div>
-                      <h3 className="text-lg font-semibold text-foreground mb-2">
+                      <h3 className="text-lg font-semibold text-gray-100 mb-2">
                         Remediation
                       </h3>
-                      <p className="text-foreground/80">
+                      <p className="text-gray-300">
                         {formatAIField(article.remediation)}
                       </p>
                     </div>
@@ -207,10 +207,10 @@ export default async function ArticleDetailPage({ params }: PageProps) {
               </div>
             ) : (
               <div className="text-center py-8">
-                <p className="text-lg text-muted-foreground mb-4">
+                <p className="text-lg text-gray-400 mb-4">
                   AI analysis is not available for this article yet.
                 </p>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm text-gray-500">
                   Check back later or read the original article below.
                 </p>
               </div>
