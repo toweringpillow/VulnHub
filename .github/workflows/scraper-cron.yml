@@ -13,14 +13,13 @@ jobs:
       - name: Trigger Scraper
         run: |
           # Construct URL - handle both with and without https://
-          URL="${{ secrets.SCRAPER_URL }}"
+          URL="${{ vars.SCRAPER_URL }}"
           
-          # Debug: Show what we received (without exposing full secret)
-          echo "🔍 SCRAPER_URL secret length: ${#URL} characters"
-          echo "🔍 SCRAPER_URL starts with: ${URL:0:10}..."
+          # Debug: Show what we received
+          echo "🔍 SCRAPER_URL variable: ${URL}"
           
           if [[ -z "$URL" ]]; then
-            echo "❌ ERROR: SCRAPER_URL secret is empty or not set!"
+            echo "❌ ERROR: SCRAPER_URL variable is empty or not set!"
             exit 1
           fi
           
