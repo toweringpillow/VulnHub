@@ -22,7 +22,7 @@ export const createClient = () => {
       return client
     }
     return mockClient
-  } catch (_error) {
+  } catch {
     // If client creation fails, return mock to prevent crashes
     console.warn('Supabase client creation failed, using mock client')
     return mockClient
