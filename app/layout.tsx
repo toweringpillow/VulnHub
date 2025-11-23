@@ -97,18 +97,14 @@ export default function RootLayout({
         )}
       </head>
       <body className={`${inter.variable} font-sans antialiased`}>
-        {typeof window !== 'undefined' && (
-          <>
-            <RealTimeUpdates />
-            <Toaster 
-              position="top-right"
-              toastOptions={{
-                className: 'bg-dark-800 text-gray-100 border border-dark-700',
-                duration: 5000,
-              }}
-            />
-          </>
-        )}
+        <RealTimeUpdates />
+        <Toaster 
+          position="top-right"
+          toastOptions={{
+            className: 'bg-dark-800 text-gray-100 border border-dark-700',
+            duration: 5000,
+          }}
+        />
         {children}
       </body>
     </html>
