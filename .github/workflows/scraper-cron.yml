@@ -23,20 +23,45 @@ jobs:
             exit 1
           fi
           
-          if [[ ! "$URL" =~ ^https?:// ]]; then
+          # Extract domain for DNS check
+          if [[ "$URL" =~ ^https?:// ]]; then
+            DOMAIN=$(echo "$URL" | sed -E 's|^https?://||' | cut -d'/' -f1)
+            URL="$URL"
+          else
+            DOMAIN=$(echo "$URL" | cut -d'/' -f1)
             URL="https://$URL"
           fi
           
           echo "✅ Full URL: ${URL}/api/cron/scraper"
+          echo "🔍 Testing DNS resolution for: ${DOMAIN}"
+          
+          # Test DNS resolution
+          if ! host "${DOMAIN}" > /dev/null 2>&1; then
+            echo "❌ DNS resolution failed for ${DOMAIN}"
+            echo "💡 This usually means:"
+            echo "   1. DNS hasn't fully propagated yet (can take 24-48 hours)"
+            echo "   2. Domain isn't pointing to Vercel correctly"
+            echo "   3. Domain is incorrect in SCRAPER_URL variable"
+            echo ""
+            echo "🔍 Trying alternative DNS lookup..."
+            nslookup "${DOMAIN}" || true
+            exit 1
+          fi
+          
+          echo "✅ DNS resolution successful"
           
           # Make the request with error handling
-          response=$(curl -X POST \
+          echo "📡 Making request to scraper endpoint..."
+          response=$(curl -v -X POST \
             -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
             -H "Content-Type: application/json" \
             -w "\nHTTP_CODE:%{http_code}" \
             -s \
-            "${URL}/api/cron/scraper") || {
-            echo "❌ curl failed with exit code: $?"
+            "${URL}/api/cron/scraper" 2>&1) || {
+            EXIT_CODE=$?
+            echo "❌ curl failed with exit code: $EXIT_CODE"
+            echo "Response output:"
+            echo "$response"
             exit 1
           }
           
