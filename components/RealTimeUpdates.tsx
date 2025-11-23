@@ -12,14 +12,13 @@ import toast from 'react-hot-toast'
  */
 export default function RealTimeUpdates() {
   useEffect(() => {
-    // Check if Supabase is configured
-    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-      // Silently fail if Supabase isn't configured
-      return
-    }
-
     try {
       const supabase = createClient()
+      
+      // Check if client was created successfully (will throw if env vars missing)
+      if (!supabase) {
+        return
+      }
 
       // Subscribe to new articles via Supabase Realtime
       const channel = supabase
