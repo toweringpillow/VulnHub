@@ -10,6 +10,12 @@ export const revalidate = 300 // Revalidate every 5 minutes
 
 async function getArticles(page: number = 1) {
   try {
+    // Check if Supabase env vars are set
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+      console.warn('Supabase environment variables not set')
+      return { articles: [], total: 0 }
+    }
+
     const supabase = createServerClient()
     
     const start = (page - 1) * DEFAULT_PAGE_SIZE
@@ -37,7 +43,7 @@ async function getArticles(page: number = 1) {
 
     return { articles: data || [], total: count || 0 }
   } catch (error) {
-    // Handle case where Supabase isn't configured yet
+    // Handle case where Supabase isn't configured yet or connection fails
     console.error('Error connecting to Supabase:', error)
     return { articles: [], total: 0 }
   }
@@ -48,9 +54,20 @@ export default async function HomePage({
 }: {
   searchParams: { page?: string }
 }) {
-  const page = parseInt(searchParams.page || '1')
-  const { articles, total } = await getArticles(page)
-  const totalPages = Math.ceil(total / DEFAULT_PAGE_SIZE)
+  let articles: any[] = []
+  let total = 0
+  let totalPages = 0
+  
+  try {
+    const page = parseInt(searchParams.page || '1')
+    const result = await getArticles(page)
+    articles = result.articles
+    total = result.total
+    totalPages = Math.ceil(total / DEFAULT_PAGE_SIZE)
+  } catch (error) {
+    console.error('Error in HomePage:', error)
+    // Continue with empty state
+  }
 
   return (
     <div className="min-h-screen flex flex-col">

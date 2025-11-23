@@ -21,6 +21,10 @@ export default function Header() {
               fill
               className="object-contain"
               priority
+              onError={(e) => {
+                // Fallback if logo doesn't exist
+                e.currentTarget.style.display = 'none'
+              }}
             />
           </div>
           
@@ -32,7 +36,7 @@ export default function Header() {
           </h1>
           
           {/* Tagline */}
-          <p className="text-xl md:text-2xl text-muted-foreground text-center max-w-2xl">
+          <p className="text-xl md:text-2xl text-gray-400 text-center max-w-2xl">
             AI-Powered Cybersecurity Intelligence
           </p>
         </Link>

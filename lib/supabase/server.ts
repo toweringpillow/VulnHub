@@ -5,10 +5,33 @@ import { cookies } from 'next/headers'
 import { Database } from '@/types/database'
 
 export const createServerClient = () => {
-  return createServerComponentClient<Database>({ cookies })
+  try {
+    return createServerComponentClient<Database>({ cookies })
+  } catch (error) {
+    console.error('Error creating Supabase server client:', error)
+    // Fallback: create client directly if cookies() fails
+    const { createClient } = require('@supabase/supabase-js')
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
+    const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+    if (!url || !key) {
+      throw new Error('Supabase environment variables not configured')
+    }
+    return createClient<Database>(url, key)
+  }
 }
 
 export const createRouteClient = () => {
-  return createRouteHandlerClient<Database>({ cookies })
+  try {
+    return createRouteHandlerClient<Database>({ cookies })
+  } catch (error) {
+    console.error('Error creating Supabase route client:', error)
+    // Fallback: create client directly if cookies() fails
+    const { createClient } = require('@supabase/supabase-js')
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
+    const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+    if (!url || !key) {
+      throw new Error('Supabase environment variables not configured')
+    }
+    return createClient<Database>(url, key)
+  }
 }
-
