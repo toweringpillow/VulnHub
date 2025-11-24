@@ -5,8 +5,15 @@ on:
     # Run every 5 minutes (minimum interval for GitHub Actions)
     # Note: GitHub Actions may delay scheduled workflows during high load
     # Workflows run on the default branch (main) only
+    # Scheduled workflows can be delayed up to 15 minutes during high load
     - cron: '*/5 * * * *'
   workflow_dispatch: # Allow manual triggering
+
+# Ensure workflow runs even if previous runs failed
+# This prevents GitHub from skipping scheduled runs due to failures
+concurrency:
+  group: scraper-cron
+  cancel-in-progress: false
 
 jobs:
   scrape:
