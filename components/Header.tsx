@@ -27,7 +27,7 @@ export default function Header() {
           
           {/* Tagline */}
           <p className="text-xl md:text-2xl text-gray-400 text-center max-w-2xl">
-            All Cybersecurity News as It Happens
+            Real-time Cybersecurity News
           </p>
         </Link>
       </div>
