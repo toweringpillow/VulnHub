@@ -49,39 +49,35 @@ export default function ArticleCard({ article }: ArticleCardProps) {
 
       {/* AI Summary */}
       {article.ai_summary ? (
-        <div className="space-y-4 mb-5">
-          <div className="bg-dark-900/50 rounded-lg p-4 border-l-4 border-primary-500/50">
-            <p className="text-gray-100/95 leading-relaxed text-base">
-              {article.ai_summary}
-            </p>
-          </div>
+        <div className="space-y-3 mb-4">
+          <p className="text-gray-100/90 leading-relaxed">
+            {article.ai_summary}
+          </p>
           
           {/* Meta Information */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <div className="bg-dark-900/40 rounded-lg p-3 border border-dark-600">
-              <span className="text-gray-400 font-semibold text-xs uppercase tracking-wide">Impact</span>
-              <p className="text-gray-100 mt-1.5 text-sm leading-relaxed">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+            <div className="bg-gradient-to-br from-orange-500/5 to-orange-500/2 rounded-lg p-3 border border-orange-500/10">
+              <span className="text-gray-400 font-medium">Impact: </span>
+              <span className="text-gray-100">
                 {article.impact && formatAIField(article.impact) !== 'Not specified' 
                   ? formatAIField(article.impact) 
                   : 'N/A'}
-              </p>
+              </span>
             </div>
-            <div className="bg-dark-900/40 rounded-lg p-3 border border-dark-600">
-              <span className="text-gray-400 font-semibold text-xs uppercase tracking-wide">Remediation</span>
-              <p className="text-gray-100 mt-1.5 text-sm leading-relaxed">
+            <div className="bg-gradient-to-br from-orange-500/5 to-orange-500/2 rounded-lg p-3 border border-orange-500/10">
+              <span className="text-gray-400 font-medium">Remediation: </span>
+              <span className="text-gray-100">
                 {article.remediation && formatAIField(article.remediation) !== 'Not specified' 
                   ? formatAIField(article.remediation) 
                   : 'N/A'}
-              </p>
+              </span>
             </div>
           </div>
         </div>
       ) : (
-        <div className="bg-dark-900/30 rounded-lg p-4 border border-dark-600 mb-4">
-          <p className="text-gray-400 italic text-sm">
-            Summary not available yet. Check back soon or read the original article.
-          </p>
-        </div>
+        <p className="text-gray-400 italic mb-4">
+          Summary not available yet. Check back soon or read the original article.
+        </p>
       )}
 
       {/* Tags */}

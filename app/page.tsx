@@ -4,6 +4,7 @@ import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import SearchBar from '@/components/SearchBar'
 import ArticleCard from '@/components/ArticleCard'
+import WorldNewsSidebar from '@/components/WorldNewsSidebar'
 import { DEFAULT_PAGE_SIZE } from '@/lib/constants'
 
 export const dynamic = 'force-dynamic'
@@ -95,49 +96,57 @@ export default async function HomePage({
           </p>
         </div>
 
-        {articles.length > 0 ? (
-          <div className="space-y-6">
-            {articles.map((article) => (
-              <ArticleCard key={article.id} article={article} />
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-16">
-            <p className="text-xl text-gray-400">
-              No threats found. Check back soon!
-            </p>
-            <p className="text-sm text-gray-500 mt-2">
-              The scraper runs every 15 minutes to fetch the latest threats.
-            </p>
-          </div>
-        )}
+        <div className="flex flex-col lg:flex-row gap-6">
+          {/* Main Articles - 2/3 width on large screens */}
+          <div className="w-full lg:w-2/3">
+            {articles.length > 0 ? (
+              <div className="space-y-6">
+                {articles.map((article) => (
+                  <ArticleCard key={article.id} article={article} />
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-16">
+                <p className="text-xl text-gray-400">
+                  No threats found. Check back soon!
+                </p>
+                <p className="text-sm text-gray-500 mt-2">
+                  The scraper runs every 15 minutes to fetch the latest threats.
+                </p>
+              </div>
+            )}
 
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="flex justify-center items-center space-x-2 mt-8">
-            {page > 1 && (
-              <a
-                href={`/?page=${page - 1}`}
-                className="btn-ghost px-4 py-2"
-              >
-                Previous
-              </a>
-            )}
-            
-            <span className="text-gray-400">
-              Page {page} of {totalPages}
-            </span>
-            
-            {page < totalPages && (
-              <a
-                href={`/?page=${page + 1}`}
-                className="btn-ghost px-4 py-2"
-              >
-                Next
-              </a>
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex justify-center items-center space-x-2 mt-8">
+                {page > 1 && (
+                  <a
+                    href={`/?page=${page - 1}`}
+                    className="btn-ghost px-4 py-2"
+                  >
+                    Previous
+                  </a>
+                )}
+                
+                <span className="text-gray-400">
+                  Page {page} of {totalPages}
+                </span>
+                
+                {page < totalPages && (
+                  <a
+                    href={`/?page=${page + 1}`}
+                    className="btn-ghost px-4 py-2"
+                  >
+                    Next
+                  </a>
+                )}
+              </div>
             )}
           </div>
-        )}
+
+          {/* World News Sidebar - 1/3 width on large screens, hidden on smaller */}
+          <WorldNewsSidebar />
+        </div>
       </main>
 
       <Footer />
