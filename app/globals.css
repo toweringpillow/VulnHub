@@ -52,6 +52,7 @@
   .binary-bit {
     @apply absolute text-orange-500/25 font-mono text-2xl pointer-events-none select-none;
     animation: float 8s ease-in-out infinite;
+    will-change: transform, opacity;
   }
   
   .binary-bit:nth-child(odd) {
@@ -62,20 +63,21 @@
     animation-duration: 10s;
   }
   
-  .binary-bit.bit-1 { top: 10%; left: 5%; animation-delay: 0s; }
-  .binary-bit.bit-2 { top: 20%; left: 85%; animation-delay: 1s; }
-  .binary-bit.bit-3 { top: 40%; left: 10%; animation-delay: 2s; }
-  .binary-bit.bit-4 { top: 60%; left: 90%; animation-delay: 3s; }
-  .binary-bit.bit-5 { top: 80%; left: 15%; animation-delay: 4s; }
-  .binary-bit.bit-6 { top: 30%; left: 70%; animation-delay: 1.5s; }
-  .binary-bit.bit-7 { top: 50%; left: 25%; animation-delay: 2.5s; }
-  .binary-bit.bit-8 { top: 70%; left: 80%; animation-delay: 0.5s; }
-  .binary-bit.bit-9 { top: 15%; left: 50%; animation-delay: 3.5s; }
-  .binary-bit.bit-10 { top: 85%; left: 60%; animation-delay: 1.2s; }
-  .binary-bit.bit-11 { top: 35%; left: 40%; animation-delay: 2.8s; }
-  .binary-bit.bit-12 { top: 55%; left: 65%; animation-delay: 0.8s; }
-  .binary-bit.bit-13 { top: 75%; left: 35%; animation-delay: 3.2s; }
-  .binary-bit.bit-14 { top: 25%; left: 95%; animation-delay: 1.8s; }
+  /* Animation delays are now set via inline styles in the component */
+  .binary-bit.bit-1 { animation-delay: 0s; }
+  .binary-bit.bit-2 { animation-delay: 1s; }
+  .binary-bit.bit-3 { animation-delay: 2s; }
+  .binary-bit.bit-4 { animation-delay: 3s; }
+  .binary-bit.bit-5 { animation-delay: 4s; }
+  .binary-bit.bit-6 { animation-delay: 1.5s; }
+  .binary-bit.bit-7 { animation-delay: 2.5s; }
+  .binary-bit.bit-8 { animation-delay: 0.5s; }
+  .binary-bit.bit-9 { animation-delay: 3.5s; }
+  .binary-bit.bit-10 { animation-delay: 1.2s; }
+  .binary-bit.bit-11 { animation-delay: 2.8s; }
+  .binary-bit.bit-12 { animation-delay: 0.8s; }
+  .binary-bit.bit-13 { animation-delay: 3.2s; }
+  .binary-bit.bit-14 { animation-delay: 1.8s; }
   
   /* Card styles */
   .threat-card {

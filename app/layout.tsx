@@ -6,6 +6,7 @@ import Script from 'next/script'
 import { Analytics } from '@vercel/analytics/react'
 import RealTimeUpdates from '@/components/RealTimeUpdates'
 import { Toaster } from 'react-hot-toast'
+import BinaryHeader from '@/components/BinaryHeader'
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
 
@@ -98,6 +99,10 @@ export default function RootLayout({
         )}
       </head>
       <body className={`${inter.variable} font-sans antialiased`}>
+        {/* Binary bits - persistent across all pages */}
+        <div className="fixed inset-0 pointer-events-none z-0">
+          <BinaryHeader />
+        </div>
         <RealTimeUpdates />
         <Toaster 
           position="top-right"
