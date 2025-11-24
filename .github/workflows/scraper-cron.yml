@@ -18,7 +18,14 @@ concurrency:
 jobs:
   scrape:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
+      - name: Check Schedule Status
+        run: |
+          echo "🕐 Current UTC time: $(date -u)"
+          echo "📅 Scheduled to run every 5 minutes"
+          echo "🔍 Workflow triggered by: ${{ github.event_name }}"
+      
       - name: Trigger Scraper
         run: |
           # Construct URL - handle both with and without https://
