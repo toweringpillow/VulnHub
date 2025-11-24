@@ -7,11 +7,15 @@ import { Analytics } from '@vercel/analytics/react'
 import RealTimeUpdates from '@/components/RealTimeUpdates'
 import { Toaster } from 'react-hot-toast'
 import BinaryHeader from '@/components/BinaryHeader'
+import StructuredData from '@/components/StructuredData'
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
 
 export const metadata: Metadata = {
   metadataBase: SITE_URL && SITE_URL.startsWith('http') ? new URL(SITE_URL) : undefined,
+  alternates: {
+    canonical: SITE_URL,
+  },
   title: {
     default: `${SITE_NAME} - Cybersecurity Intelligence`,
     template: `%s | ${SITE_NAME}`,
@@ -85,9 +89,40 @@ export default function RootLayout({
 }: {
   children: React.ReactNode
 }) {
+  // Organization structured data for homepage
+  const organizationData = {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: SITE_NAME,
+    url: SITE_URL,
+    logo: `${SITE_URL}/favicon.svg`,
+    description: SITE_DESCRIPTION,
+    sameAs: [],
+  }
+
+  const websiteData = {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: SITE_NAME,
+    url: SITE_URL,
+    description: SITE_DESCRIPTION,
+    potentialAction: {
+      '@type': 'SearchAction',
+      target: {
+        '@type': 'EntryPoint',
+        urlTemplate: `${SITE_URL}/search?q={search_term_string}`,
+      },
+      'query-input': 'required name=search_term_string',
+    },
+  }
+
   return (
     <html lang="en" className="dark">
       <head>
+        {/* Structured Data */}
+        <StructuredData data={organizationData} />
+        <StructuredData data={websiteData} />
+        
         {/* Google AdSense */}
         {ADSENSE_CLIENT_ID && (
           <Script

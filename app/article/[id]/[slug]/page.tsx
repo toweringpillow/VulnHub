@@ -8,6 +8,7 @@ import { formatDate, formatAIField, slugify } from '@/lib/utils'
 import { Clock, ExternalLink, AlertTriangle, ArrowLeft } from 'lucide-react'
 import { Metadata } from 'next'
 import { SITE_NAME, SITE_URL } from '@/lib/constants'
+import StructuredData from '@/components/StructuredData'
 
 interface PageProps {
   params: { id: string; slug: string }
@@ -49,16 +50,21 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   const description = article.ai_summary || article.title
 
+  const articleUrl = `${SITE_URL}/article/${article.id}/${slugify(article.title)}`
+
   return {
     title: article.title,
     description: description.slice(0, 160),
+    alternates: {
+      canonical: articleUrl,
+    },
     openGraph: {
       title: article.title,
       description: description.slice(0, 160),
       type: 'article',
       publishedTime: article.published_date,
       authors: [article.source || SITE_NAME],
-      url: `${SITE_URL}/article/${article.id}/${slugify(article.title)}`,
+      url: articleUrl,
     },
     twitter: {
       card: 'summary_large_image',
@@ -76,9 +82,40 @@ export default async function ArticleDetailPage({ params }: PageProps) {
   }
 
   const tags = article.article_tags?.map((at: any) => at.tags) || []
+  
+  // Structured data for SEO
+  const structuredData = {
+    '@context': 'https://schema.org',
+    '@type': 'NewsArticle',
+    headline: article.title,
+    description: article.ai_summary || article.original_summary || article.title,
+    image: `${SITE_URL}/og-image.png`,
+    datePublished: article.published_date,
+    dateModified: article.updated_at || article.created_at,
+    author: {
+      '@type': 'Organization',
+      name: article.source || SITE_NAME,
+    },
+    publisher: {
+      '@type': 'Organization',
+      name: SITE_NAME,
+      logo: {
+        '@type': 'ImageObject',
+        url: `${SITE_URL}/favicon.svg`,
+      },
+    },
+    mainEntityOfPage: {
+      '@type': 'WebPage',
+      '@id': `${SITE_URL}/article/${article.id}/${slugify(article.title)}`,
+    },
+    keywords: tags.map((tag: any) => tag.name).join(', '),
+    articleSection: 'Cybersecurity',
+    inLanguage: 'en-US',
+  }
 
   return (
     <div className="min-h-screen flex flex-col">
+      <StructuredData data={structuredData} />
       <Header />
       <Navbar />
       

@@ -6,20 +6,20 @@
 [![Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black)](https://vercel.com/)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-**VulnHub** is a real-time cybersecurity threat aggregator that collects, summarizes, and displays security threats from multiple sources. Designed for cybersecurity professionals to have a one-stop shop for all cyber news.
+**VulnHub** is a real-time cybersecurity threat aggregator that collects, summarizes, and displays security threats from multiple trusted sources. Designed for cybersecurity professionals who need a comprehensive, up-to-date view of the threat landscape.
 
 ## ✨ Features
 
-- 🤖 **AI-Powered Summaries**: OpenAI GPT-4o-mini analyzes and summarizes every threat
-- 🔄 **Real-Time Updates**: New threats appear instantly via Supabase Realtime
-- 🏷️ **Smart Tagging**: Auto-tags threats by OS, vendor, threat type, severity
+- 🤖 **AI-Powered Analysis**: OpenAI GPT-4o-mini analyzes and summarizes every threat with detailed impact and remediation information
+- 🔄 **Real-Time Updates**: New threats appear instantly via Supabase Realtime subscriptions
+- 🏷️ **Smart Tagging**: Auto-tags threats by OS, vendor, threat type, and severity
 - 🔍 **Advanced Search**: Full-text search across titles, summaries, and tags
-- 👤 **User Accounts**: Register, login, customize alert subscriptions
-- 📊 **IOC Lookup**: VirusTotal API integration for hash/URL analysis
-- 🌍 **World News Ticker**: Stay updated on global events
-- 📱 **Responsive Design**: Works beautifully on desktop, tablet, and mobile
-- 🔒 **Security First**: Built with security best practices (RLS, CSP, input validation)
-- ⚡ **Lightning Fast**: Next.js 14 App Router with optimal performance
+- 📊 **IOC Lookup**: VirusTotal API integration for hash/URL analysis (coming soon)
+- 🌍 **World News Ticker**: Stay updated on global cybersecurity events
+- 📱 **Responsive Design**: Optimized for desktop, tablet, and mobile
+- 🔒 **Security First**: Built with security best practices (RLS, CSP, secure headers)
+- ⚡ **High Performance**: Next.js 14 App Router with optimal SEO and performance
+- 📈 **SEO Optimized**: Structured data, sitemaps, and comprehensive meta tags
 
 ## 📊 Data Sources
 
@@ -29,19 +29,21 @@
 - **Securelist (Kaspersky)**
 - **SecurityWeek**
 - **ZDNet Security**
-- More sources added regularly!
+
+More sources added regularly!
 
 ## 🛠️ Tech Stack
 
 - **Frontend**: Next.js 14 (App Router), React 18, TypeScript
-- **Styling**: Tailwind CSS, Framer Motion
+- **Styling**: Tailwind CSS
 - **Database**: Supabase (PostgreSQL)
 - **Authentication**: Supabase Auth
 - **AI**: OpenAI GPT-4o-mini
 - **Hosting**: Vercel
 - **RSS Parsing**: rss-parser
-- **Scraping**: GitHub Actions (every 5 minutes) - external cron service
+- **Scraping**: GitHub Actions (every 5 minutes)
 - **Real-time**: Supabase Realtime subscriptions
+- **Analytics**: Vercel Analytics
 
 ## 🚀 Quick Start
 
@@ -51,7 +53,7 @@
 - npm 9.0.0+
 - Supabase account (free tier)
 - OpenAI API key
-- VirusTotal API key (free tier)
+- VirusTotal API key (free tier, optional)
 
 ### Installation
 
@@ -63,10 +65,8 @@ cd VulnHub
 # Install dependencies
 npm install
 
-# Copy environment variables
-cp .env.local.example .env.local
-
-# Edit .env.local with your keys (see SETUP_GUIDE.md)
+# Set up environment variables
+# Copy .env.local.example to .env.local and fill in your keys
 
 # Run database migrations in Supabase SQL Editor
 # Copy contents of supabase/schema.sql and run it
@@ -77,18 +77,9 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-## 📖 Documentation
-
-- **[Domain Setup](DOMAIN_SETUP.md)**: Complete guide for pointing domain to Vercel
-- **[Development Workflow](DEV_WORKFLOW.md)**: How to use dev branch for testing
-- **[External Cron Setup](EXTERNAL_CRON_SETUP.md)**: Configure GitHub Actions for scraping
-- **[Test Scraper](TEST_SCRAPER.md)**: How to test the scraper endpoint
-- **[Real-Time Scraping Options](REALTIME_SCRAPING_OPTIONS.md)**: Options for more real-time updates
-- **[Environment Variables](.env.local.example)**: All required API keys and config
-
 ## 🔐 Environment Variables
 
-Create a `.env.local` file with the following (see `.env.local.example` for details):
+Create a `.env.local` file with the following:
 
 ```env
 # Supabase
@@ -99,17 +90,17 @@ SUPABASE_SERVICE_ROLE_KEY=your-service-key
 # OpenAI
 OPENAI_API_KEY=sk-your-key
 
-# VirusTotal
+# VirusTotal (optional)
 VIRUSTOTAL_API_KEY=your-key
-
-# Web3Forms (contact form)
-WEB3FORMS_ACCESS_KEY=your-key
 
 # News API (optional)
 NEWS_API_KEY=your-key
 
 # Security
 CRON_SECRET=your-random-string
+
+# Site Configuration
+SITE_URL=https://vulnerabilityhub.com
 ```
 
 ## 🏗️ Project Structure
@@ -117,31 +108,28 @@ CRON_SECRET=your-random-string
 ```
 VulnHub/
 ├── app/                    # Next.js App Router
-│   ├── (auth)/            # Auth routes
-│   ├── (main)/            # Main app routes
 │   ├── api/               # API routes & cron jobs
+│   ├── article/           # Article detail pages
 │   ├── layout.tsx         # Root layout
 │   └── page.tsx           # Homepage
 ├── components/            # React components
-│   ├── ui/               # Reusable UI components
-│   ├── Header.tsx        # Animated binary header
+│   ├── ArticleCard.tsx    # Threat display cards
+│   ├── Header.tsx        # Site header
 │   ├── Navbar.tsx        # Navigation
-│   ├── ArticleCard.tsx   # Threat display cards
 │   └── ...
 ├── lib/                   # Utilities & helpers
-│   ├── supabase/         # Supabase client
+│   ├── supabase/         # Supabase clients
 │   ├── openai.ts         # AI integration
-│   └── scraper.ts        # RSS scraping
+│   ├── scraper.ts        # RSS scraping
+│   └── logger.ts         # Logging utility
 ├── supabase/             # Database schema
 ├── public/               # Static assets
-├── types/                # TypeScript types
-├── .env.local.example    # Environment template
-└── vercel.json           # Vercel config (cron)
+└── types/                # TypeScript types
 ```
 
 ## 🔄 How It Works
 
-1. **Scraping**: GitHub Actions cron runs every 5 minutes (external cron service)
+1. **Scraping**: GitHub Actions cron runs every 5 minutes
 2. **Parsing**: RSS feeds parsed, articles extracted
 3. **AI Analysis**: OpenAI analyzes content, generates summary, extracts tags
 4. **Storage**: Articles saved to Supabase PostgreSQL
@@ -152,74 +140,44 @@ VulnHub/
 
 - **Row Level Security (RLS)**: Database-level access control
 - **Content Security Policy (CSP)**: Prevents XSS attacks
-- **Input Sanitization**: All user inputs sanitized
-- **Rate Limiting**: API endpoints protected
-- **Secure Headers**: HSTS, X-Frame-Options, etc.
+- **Secure Headers**: HSTS, X-Frame-Options, X-Content-Type-Options, etc.
+- **Input Sanitization**: All user inputs validated and sanitized
 - **Environment Variables**: All secrets in .env (never committed)
-- **Cron Authentication**: Protected with secret token
+- **Cron Authentication**: Protected endpoints with secret tokens
+- **Rate Limiting**: API endpoints protected against abuse
 
-## 📱 Responsive Design
+## 📈 SEO Features
 
-VulnHub works perfectly on:
-- 💻 Desktop (1920px+)
-- 💻 Laptop (1280px - 1919px)
-- 📱 Tablet (768px - 1279px)
-- 📱 Mobile (320px - 767px)
-
-## 🎨 Design Philosophy
-
-- **Dark Theme**: Professional cybersecurity aesthetic
-- **Animated Binary Header**: Floating 1s and 0s (preserved from original)
-- **Clean Cards**: Easy-to-scan threat information
-- **Fast Navigation**: Sticky navbar, smooth scrolling
-- **Accessible**: WCAG 2.1 AA compliant
+- **Structured Data (JSON-LD)**: Organization, Website, and Article schemas
+- **Sitemap**: Dynamic sitemap with all articles
+- **Robots.txt**: Properly configured for search engines
+- **Meta Tags**: Comprehensive Open Graph and Twitter Card tags
+- **Canonical URLs**: Prevents duplicate content issues
+- **Semantic HTML**: Proper heading hierarchy and article structure
 
 ## 🚢 Deployment
 
 ### Vercel (Recommended)
 
 1. Push to GitHub
-2. Connect repo to Vercel
+2. Connect repository to Vercel
 3. Add environment variables in Vercel dashboard
 4. Deploy!
-
-See [DOMAIN_SETUP.md](DOMAIN_SETUP.md) for detailed domain configuration instructions.
 
 ### Branch Structure
 
 - **`main` branch** → Production (deploys to `vulnerabilityhub.com`)
-- **`dev` branch** → Development/Staging (deploys to preview URL for testing)
+- **`dev` branch** → Development/Staging (deploys to preview URL)
 
-### Development Workflow
+### GitHub Actions Setup
 
-1. **Make changes on `dev` branch:**
-   ```bash
-   git checkout dev
-   # Make changes
-   git add .
-   git commit -m "Your changes"
-   git push origin dev
-   ```
-   - Vercel automatically creates a preview deployment
-   - Test on the preview URL before production
+The scraper runs automatically via GitHub Actions every 5 minutes. Configure:
 
-2. **Deploy to production:**
-   ```bash
-   git checkout main
-   git merge dev
-   git push origin main
-   ```
-   - Automatically deploys to `vulnerabilityhub.com`
-
-See [DEV_WORKFLOW.md](DEV_WORKFLOW.md) for complete development workflow guide.
-
-### DNS Configuration
-
-Domain is configured to point to Vercel via nameservers:
-- **Production:** `vulnerabilityhub.com` → Vercel (via nameservers)
-- **Preview:** Automatic preview URLs for `dev` branch
-
-See [DOMAIN_SETUP.md](DOMAIN_SETUP.md) for detailed setup instructions.
+1. Go to GitHub repo → Settings → Secrets and variables → Actions
+2. Add repository secrets:
+   - `CRON_SECRET`: Your cron secret (same as Vercel env var)
+3. Add repository variables:
+   - `SCRAPER_URL`: Your production URL (e.g., `vulnerabilityhub.com`)
 
 ## 📊 Usage & Costs
 
@@ -229,16 +187,17 @@ See [DOMAIN_SETUP.md](DOMAIN_SETUP.md) for detailed setup instructions.
 - **Supabase**: 500MB database, 2GB bandwidth/month
 - **OpenAI**: Pay-as-you-go (~$0.001 per article)
 - **VirusTotal**: 500 requests/day
+- **GitHub Actions**: 2,000 minutes/month
 
 ### Estimated Costs
 
 - ~50 articles/day × $0.001 = **$1.50/month** (OpenAI)
-- Vercel & Supabase: **$0/month** (free tier)
+- Vercel, Supabase, GitHub Actions: **$0/month** (free tier)
 - **Total**: ~$1.50/month
 
 ## 🤝 Contributing
 
-This is a personal project, but suggestions are welcome! Open an issue or submit a PR.
+This is a personal project, but suggestions and contributions are welcome! Open an issue or submit a PR.
 
 ## 📄 License
 
@@ -251,14 +210,9 @@ MIT License - see [LICENSE](LICENSE) for details.
 - **Vercel**: For seamless Next.js deployment
 - **RSS Feed Providers**: CISA, The Hacker News, Dark Reading, SecurityWeek, Securelist
 
-## 📧 Contact
-
-Have questions? Use the contact form on the live site or open a GitHub issue.
-
 ---
 
 **Built with ❤️ for the cybersecurity community**
 
 🔗 **Live Site**: [https://vulnerabilityhub.com](https://vulnerabilityhub.com)  
 🐙 **GitHub**: [https://github.com/toweringpillow/VulnHub](https://github.com/toweringpillow/VulnHub)
-
