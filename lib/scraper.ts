@@ -107,8 +107,14 @@ export async function scrapeArticles(): Promise<ScrapeResult> {
             continue
           }
 
-          // Analyze with AI
-          const aiResult = await analyzeArticle(title, link, summary)
+          // Check for CVE and "In the Wild" indicators before AI analysis
+          const cvePattern = /CVE-\d{4}-\d+/i
+          const hasCVE = cvePattern.test(title) || cvePattern.test(summary)
+          const searchTextLower = `${title} ${summary}`.toLowerCase()
+          const hasInWildTag = /in the wild|actively exploited|active exploitation|zero-day exploit/i.test(searchTextLower)
+
+          // Analyze with AI (pass context about CVE/In the Wild)
+          const aiResult = await analyzeArticle(title, link, summary, hasCVE, hasInWildTag)
 
           // Match tags
           const articleTags: number[] = []
@@ -237,11 +243,22 @@ async function reprocessFailedArticles(limit = 3): Promise<number> {
 
   for (const article of failedArticles) {
     console.log(`Reprocessing article ${(article as any).id}`)
+    
+    const title = (article as any).title
+    const summary = (article as any).original_summary || ''
+    
+    // Check for CVE and "In the Wild" indicators
+    const cvePattern = /CVE-\d{4}-\d+/i
+    const hasCVE = cvePattern.test(title) || cvePattern.test(summary)
+    const searchTextLower = `${title} ${summary}`.toLowerCase()
+    const hasInWildTag = /in the wild|actively exploited|active exploitation|zero-day exploit/i.test(searchTextLower)
 
     const aiResult = await analyzeArticle(
-      (article as any).title,
+      title,
       '',
-      (article as any).original_summary || ''
+      summary,
+      hasCVE,
+      hasInWildTag
     )
 
     if (aiResult) {

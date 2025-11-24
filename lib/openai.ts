@@ -15,7 +15,9 @@ const ENABLE_AI = process.env.ENABLE_AI === 'true'
 export async function analyzeArticle(
   title: string,
   link: string,
-  summary: string
+  summary: string,
+  hasCVE: boolean = false,
+  hasInWildTag: boolean = false
 ): Promise<AIAnalysisResult | null> {
   if (!ENABLE_AI || !process.env.OPENAI_API_KEY) {
     console.warn('AI analysis disabled or API key missing')
@@ -26,6 +28,22 @@ export async function analyzeArticle(
     // Clean and truncate summary if needed
     const cleanedSummary = summary.replace(/<[^>]*>/g, '').slice(0, 7000)
 
+    // Detect CVE in title/summary if not already detected
+    const cvePattern = /CVE-\d{4}-\d+/i
+    const hasCVEDetected = hasCVE || cvePattern.test(title) || cvePattern.test(cleanedSummary)
+
+    // Build enhanced prompt for critical vulnerabilities
+    const criticalContext = (hasCVEDetected || hasInWildTag) 
+      ? `\n\n**CRITICAL: This article mentions a CVE (${hasCVEDetected ? 'YES' : 'NO'}) or is tagged as "In the Wild" (${hasInWildTag ? 'YES' : 'NO'}). 
+You MUST provide detailed Impact and Remediation information. 
+- For Impact: List ALL affected products, systems, versions, and vendors mentioned. Be comprehensive.
+- For Remediation: Extract ALL remediation steps, patches, updates, workarounds, or mitigation strategies mentioned. 
+  If patches are available, include patch numbers/versions. If workarounds exist, describe them.
+  If the article doesn't explicitly mention remediation, infer reasonable remediation steps based on the vulnerability type.
+  DO NOT use "Not specified" unless absolutely no remediation information can be found or inferred.
+- Be thorough and professional - cybersecurity professionals rely on this information.` 
+      : ''
+
     const prompt = `Article Title: ${title}
 Article Content:
 ${cleanedSummary}
@@ -33,12 +51,12 @@ ${cleanedSummary}
 ---
 Analyze the provided cybersecurity article content. Based **only** on the text above, extract the following information.
 **Important: You must respond in valid JSON format.** Your entire response must be a single JSON object with the following keys:
-- "ai_summary": A brief summary (2-3 sentences) focusing on the core issue.
-- "impact": A string listing the main affected products or vendors. If none, value should be "Not specified".
-- "in_wild": A string indicating if the vulnerability is actively exploited. Answer only "Yes", "No", or "Unknown".
-- "age": A string describing the disclosure timeline (e.g., "Newly disclosed").
-- "remediation": A string listing primary remediation steps. If none, use "Not specified".
-- "suggested_tags": A JSON array of 3-5 relevant string keywords.`
+- "ai_summary": A brief summary (2-3 sentences) focusing on the core issue, severity, and key implications.
+- "impact": A string listing the main affected products, vendors, systems, or versions. Be specific and comprehensive. If none can be determined, value should be "Not specified".
+- "in_wild": A string indicating if the vulnerability is actively exploited. Answer only "Yes", "No", or "Unknown". Look for phrases like "actively exploited", "in the wild", "active exploitation", "zero-day exploit".
+- "age": A string describing the disclosure timeline (e.g., "Newly disclosed", "Disclosed on [date]", "Ongoing since [timeframe]").
+- "remediation": A string listing primary remediation steps, patches, updates, workarounds, or mitigation strategies. Include specific patch numbers, versions, or configuration changes if mentioned. If none are mentioned, infer reasonable remediation steps based on the vulnerability type. Only use "Not specified" if absolutely no remediation information can be found or inferred.
+- "suggested_tags": A JSON array of 3-5 relevant string keywords that would help categorize this threat.${criticalContext}`
 
     const response = await openai.chat.completions.create({
       model: AI_MODEL,

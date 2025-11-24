@@ -79,7 +79,26 @@
   
   /* Card styles */
   .threat-card {
-    @apply bg-dark-800 border border-dark-700 rounded-lg p-6 hover:border-primary-500/50 transition-all duration-300;
+    @apply bg-gradient-to-br from-dark-800 to-dark-900 border border-dark-700 rounded-xl p-6 
+           hover:border-primary-500/60 hover:shadow-lg hover:shadow-primary-500/10 
+           transition-all duration-300 relative overflow-hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  }
+  
+  .threat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, var(--primary-500), transparent);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  
+  .threat-card:hover::before {
+    opacity: 0.6;
   }
   
   /* Tag styles */
