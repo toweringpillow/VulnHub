@@ -89,7 +89,7 @@ export const MAX_PAGE_SIZE = 50
 
 // Site metadata
 export const SITE_NAME = 'VulnHub'
-export const SITE_DESCRIPTION = 'Real-time AI-powered cybersecurity threat intelligence aggregator'
+export const SITE_DESCRIPTION = 'Real-time cybersecurity threat intelligence aggregator'
 export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://vulnerabilityhub.com'
 export const SITE_LOGO = '/images/logo.png'
 export const SITE_FAVICON = '/images/favicon.ico'

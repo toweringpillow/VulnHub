@@ -151,7 +151,7 @@ export default async function ArticleDetailPage({ params }: PageProps) {
               <div className="space-y-6">
                 <div>
                   <h2 className="text-xl font-semibold text-gray-100 mb-3">
-                    AI Summary
+                    Summary
                   </h2>
                   <p className="text-gray-200 text-lg leading-relaxed">
                     {article.ai_summary}
@@ -160,16 +160,14 @@ export default async function ArticleDetailPage({ params }: PageProps) {
 
                 {/* Detailed Information */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {article.impact && (
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-100 mb-2">
-                        Impact
-                      </h3>
-                      <p className="text-gray-300">
-                        {formatAIField(article.impact)}
-                      </p>
-                    </div>
-                  )}
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-100 mb-2">
+                      Impact
+                    </h3>
+                    <p className="text-gray-300">
+                      {article.impact ? formatAIField(article.impact) : 'N/A'}
+                    </p>
+                  </div>
 
                   {article.in_wild && (
                     <div>
@@ -193,22 +191,20 @@ export default async function ArticleDetailPage({ params }: PageProps) {
                     </div>
                   )}
 
-                  {article.remediation && (
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-100 mb-2">
-                        Remediation
-                      </h3>
-                      <p className="text-gray-300">
-                        {formatAIField(article.remediation)}
-                      </p>
-                    </div>
-                  )}
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-100 mb-2">
+                      Remediation
+                    </h3>
+                    <p className="text-gray-300">
+                      {article.remediation ? formatAIField(article.remediation) : 'N/A'}
+                    </p>
+                  </div>
                 </div>
               </div>
             ) : (
               <div className="text-center py-8">
                 <p className="text-lg text-gray-400 mb-4">
-                  AI analysis is not available for this article yet.
+                  Analysis is not available for this article yet.
                 </p>
                 <p className="text-sm text-gray-500">
                   Check back later or read the original article below.

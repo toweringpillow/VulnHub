@@ -17,7 +17,7 @@ export default function ArticleCard({ article }: ArticleCardProps) {
         <div className="flex-1">
           <Link
             href={`/article/${article.id}/${slugify(article.title)}`}
-            className="text-xl font-semibold text-gray-100 hover:text-primary-500 transition-colors line-clamp-2"
+            className="text-2xl md:text-3xl font-bold text-gray-100 hover:text-primary-500 transition-colors line-clamp-2"
           >
             {article.title}
           </Link>
@@ -45,23 +45,23 @@ export default function ArticleCard({ article }: ArticleCardProps) {
           
           {/* Meta Information */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
-            {article.impact && (
-              <div>
-                <span className="text-gray-400 font-medium">Impact: </span>
-                <span className="text-gray-100">{formatAIField(article.impact)}</span>
-              </div>
-            )}
-            {article.remediation && (
-              <div>
-                <span className="text-gray-400 font-medium">Remediation: </span>
-                <span className="text-gray-100">{formatAIField(article.remediation)}</span>
-              </div>
-            )}
+            <div>
+              <span className="text-gray-400 font-medium">Impact: </span>
+              <span className="text-gray-100">
+                {article.impact ? formatAIField(article.impact) : 'N/A'}
+              </span>
+            </div>
+            <div>
+              <span className="text-gray-400 font-medium">Remediation: </span>
+              <span className="text-gray-100">
+                {article.remediation ? formatAIField(article.remediation) : 'N/A'}
+              </span>
+            </div>
           </div>
         </div>
       ) : (
         <p className="text-gray-400 italic mb-4">
-          AI summary not available yet. Check back soon or read the original article.
+          Summary not available yet. Check back soon or read the original article.
         </p>
       )}
 

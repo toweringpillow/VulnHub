@@ -91,7 +91,7 @@ export default async function HomePage({
             Latest Cybersecurity Threats
           </h2>
           <p className="text-gray-400">
-            Real-time threat intelligence from trusted sources, analyzed by AI
+            Real-time threat intelligence from trusted sources
           </p>
         </div>
 

@@ -12,7 +12,7 @@ const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
 export const metadata: Metadata = {
   metadataBase: SITE_URL && SITE_URL.startsWith('http') ? new URL(SITE_URL) : undefined,
   title: {
-    default: `${SITE_NAME} - AI-Powered Cybersecurity Intelligence`,
+    default: `${SITE_NAME} - Cybersecurity Intelligence`,
     template: `%s | ${SITE_NAME}`,
   },
   description: SITE_DESCRIPTION,
@@ -28,7 +28,6 @@ export const metadata: Metadata = {
     'malware',
     'zero-day',
     'IOC',
-    'AI summary',
   ],
   authors: [{ name: 'VulnHub Team' }],
   creator: 'VulnHub',

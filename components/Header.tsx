@@ -13,17 +13,17 @@ export default function Header() {
           href="/" 
           className="flex flex-col items-center space-y-4 no-underline group"
         >
-          {/* Logo/Icon */}
-          <div className="transition-transform group-hover:scale-110 duration-300">
-            <VLogo size="md" />
+          {/* Logo and Site Name */}
+          <div className="flex items-center space-x-4">
+            <div className="transition-transform group-hover:scale-110 duration-300">
+              <VLogo size="md" />
+            </div>
+            <h1 className="text-3xl md:text-4xl font-bold">
+              <span className="text-orange-400">
+                {SITE_NAME}
+              </span>
+            </h1>
           </div>
-          
-          {/* Site Name */}
-          <h1 className="text-3xl md:text-4xl font-bold text-center">
-            <span className="text-orange-400">
-              {SITE_NAME}
-            </span>
-          </h1>
           
           {/* Tagline */}
           <p className="text-xl md:text-2xl text-gray-400 text-center max-w-2xl">

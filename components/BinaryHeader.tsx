@@ -11,7 +11,10 @@ export default function BinaryHeader() {
 
   if (!mounted) return null
 
-  const bits = ['1', '0', '1', '0', '1', '0', '1', '0', '0', '1', '1', '0', '1', '0']
+  // Generate random mix of 1s and 0s
+  const bits = Array.from({ length: 14 }, () => 
+    Math.random() > 0.5 ? '1' : '0'
+  )
 
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none">
