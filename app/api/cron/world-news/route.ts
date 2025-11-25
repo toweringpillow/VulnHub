@@ -7,7 +7,7 @@ export const maxDuration = 30
 
 /**
  * Cron endpoint for world news scraping
- * Called by Vercel Cron every 6 hours
+ * Called by GitHub Actions every 6 hours
  * Protected by Authorization header
  */
 export async function POST(_request: Request) {

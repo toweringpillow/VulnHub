@@ -1,0 +1,97 @@
+name: Scrape World News
+
+on:
+  schedule:
+    # Run every 6 hours
+    - cron: '0 */6 * * *'
+  workflow_dispatch: # Allow manual triggering
+
+# Ensure workflow runs even if previous runs failed
+concurrency:
+  group: world-news-cron
+  cancel-in-progress: false
+
+jobs:
+  scrape-world-news:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check Schedule Status
+        run: |
+          echo "🕐 Current UTC time: $(date -u)"
+          echo "📅 Scheduled to run every 6 hours"
+          echo "🔍 Workflow triggered by: ${{ github.event_name }}"
+      
+      - name: Trigger World News Scraper
+        run: |
+          # Construct URL - handle both with and without https://
+          URL="${{ vars.SCRAPER_URL }}"
+          
+          # Debug: Check if variable exists
+          echo "🔍 Checking for SCRAPER_URL variable..."
+          
+          if [[ -z "$URL" ]]; then
+            echo "❌ ERROR: SCRAPER_URL variable is empty or not set!"
+            echo "💡 Make sure you:"
+            echo "   1. Go to Settings → Secrets and variables → Actions → Variables tab"
+            echo "   2. Created a REPOSITORY variable (not environment variable) named SCRAPER_URL"
+            echo "   3. Set the value to: www.vulnerabilityhub.com (use www to avoid redirects)"
+            exit 1
+          fi
+          
+          # Extract domain for DNS check
+          if [[ "$URL" =~ ^https?:// ]]; then
+            DOMAIN=$(echo "$URL" | sed -E 's|^https?://||' | cut -d'/' -f1)
+            URL="$URL"
+          else
+            DOMAIN=$(echo "$URL" | cut -d'/' -f1)
+            URL="https://$URL"
+          fi
+          
+          echo "✅ Extracted domain: ${DOMAIN}"
+          echo "✅ Full URL: ${URL}/api/cron/world-news"
+          
+          # Make the request with error handling
+          echo "📡 Making request to world news scraper endpoint..."
+          echo "📡 URL: ${URL}/api/cron/world-news"
+          
+          set +e  # Don't exit on error immediately
+          response=$(curl --location-trusted -X POST \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            -H "Content-Type: application/json" \
+            -w "\nHTTP_CODE:%{http_code}" \
+            --connect-timeout 10 \
+            --max-time 30 \
+            -v \
+            "${URL}/api/cron/world-news" 2>&1)
+          CURL_EXIT=$?
+          set -e
+          
+          if [ $CURL_EXIT -ne 0 ]; then
+            echo "❌ curl failed with exit code: $CURL_EXIT"
+            echo "Full curl output:"
+            echo "$response"
+            exit 1
+          fi
+          
+          # Extract HTTP code and body
+          http_code=$(echo "$response" | grep -o "HTTP_CODE:[0-9]*" | cut -d: -f2 || echo "000")
+          body=$(echo "$response" | grep -v "^<" | grep -v "^>" | grep -v "HTTP_CODE:" | tail -n +1)
+          
+          echo ""
+          echo "=== Response Summary ==="
+          echo "HTTP Code: ${http_code}"
+          echo "Response Body:"
+          echo "$body"
+          echo "========================"
+          
+          # Check if request was successful
+          if [ "$http_code" -ge 200 ] && [ "$http_code" -lt 300 ]; then
+            echo "✅ World news scraper triggered successfully (HTTP $http_code)"
+          else
+            echo "❌ World news scraper failed with HTTP $http_code"
+            echo "Full response:"
+            echo "$response"
+            exit 1
+          fi
+

@@ -93,7 +93,7 @@ OPENAI_API_KEY=sk-your-key
 # VirusTotal (optional)
 VIRUSTOTAL_API_KEY=your-key
 
-# News API (optional)
+# News API (optional - for World News ticker)
 NEWS_API_KEY=your-key
 
 # Security
@@ -102,6 +102,30 @@ CRON_SECRET=your-random-string
 # Site Configuration
 SITE_URL=https://vulnerabilityhub.com
 ```
+
+### Getting a NewsAPI Key
+
+The World News ticker feature uses [NewsAPI.org](https://newsapi.org/) to fetch general cybersecurity news headlines. Here's how to set it up:
+
+1. **Sign up for a free account**:
+   - Visit [https://newsapi.org/register](https://newsapi.org/register)
+   - Create a free account (no credit card required)
+
+2. **Get your API key**:
+   - After registration, you'll receive an API key
+   - Free tier includes: 100 requests/day, 1 request/second
+
+3. **Add to environment variables**:
+   - Add `NEWS_API_KEY=your-actual-api-key` to your `.env.local` file
+   - For production (Vercel), add it in: Project Settings → Environment Variables
+
+4. **How it works**:
+   - The world news scraper runs via cron job (every 6 hours)
+   - Fetches top 25 headlines from US news sources
+   - Displays in the sidebar on the homepage
+   - If `NEWS_API_KEY` is not set, the world news feature will be disabled (no errors, just empty)
+
+**Note**: The free tier is sufficient for personal use. If you need more requests, NewsAPI offers paid plans starting at $449/month.
 
 ## 🏗️ Project Structure
 
