@@ -1,3 +1,4 @@
+import { Suspense } from 'react'
 import { createServerClient } from '@/lib/supabase/server'
 import Header from '@/components/Header'
 import Navbar from '@/components/Navbar'
@@ -5,6 +6,7 @@ import Footer from '@/components/Footer'
 import SearchBar from '@/components/SearchBar'
 import ArticleCard from '@/components/ArticleCard'
 import WorldNewsSidebar from '@/components/WorldNewsSidebar'
+import PageRefreshHandler from '@/components/PageRefreshHandler'
 import { DEFAULT_PAGE_SIZE } from '@/lib/constants'
 
 export const dynamic = 'force-dynamic'
@@ -81,6 +83,9 @@ export default async function HomePage({
 
   return (
     <div className="min-h-screen flex flex-col">
+      <Suspense fallback={null}>
+        <PageRefreshHandler />
+      </Suspense>
       <Header />
       <Navbar />
       
