@@ -304,10 +304,17 @@ export async function scrapeWorldNews(): Promise<number> {
       return 0
     }
 
-    // Fetch top headlines
-    const response = await fetch(
-      `https://newsapi.org/v2/top-headlines?country=us&pageSize=25&apiKey=${newsApiKey}`
+    // Fetch top headlines - try technology category first, fallback to general
+    let response = await fetch(
+      `https://newsapi.org/v2/top-headlines?country=us&category=technology&pageSize=25&apiKey=${newsApiKey}`
     )
+    
+    // If technology category fails or returns few results, try general news
+    if (!response.ok) {
+      response = await fetch(
+        `https://newsapi.org/v2/top-headlines?country=us&pageSize=25&apiKey=${newsApiKey}`
+      )
+    }
 
     if (!response.ok) {
       console.error('NewsAPI error:', response.statusText)
@@ -316,26 +323,81 @@ export async function scrapeWorldNews(): Promise<number> {
 
     const data = await response.json()
 
+    // Keywords to filter out non-news content
+    const filterKeywords = [
+      'horoscope',
+      'zodiac',
+      'astrology',
+      'daily horoscope',
+      'your horoscope',
+      'birth chart',
+      'comic strip',
+      'comics',
+      'crossword',
+      'sudoku',
+      'puzzle',
+      'recipe',
+      'cooking',
+      'restaurant review',
+      'movie review',
+      'tv review',
+      'celebrity gossip',
+      'entertainment news',
+      'sports betting',
+      'fantasy sports',
+      'lottery',
+      'powerball',
+      'mega millions',
+    ]
+
     if (data.articles) {
+      console.log(`Received ${data.articles.length} articles from NewsAPI`)
       for (const article of data.articles) {
-        if (article.title && article.url) {
-          headlines.push({
-            title: article.title,
-            link: article.url,
-            source: article.source?.name || 'Unknown',
-            created_at: new Date().toISOString(),
-          })
+        if (!article.title || !article.url) continue
+
+        const titleLower = article.title.toLowerCase()
+        const descriptionLower = (article.description || '').toLowerCase()
+        const combinedText = `${titleLower} ${descriptionLower}`
+
+        // Skip if contains filter keywords
+        const shouldFilter = filterKeywords.some((keyword) =>
+          combinedText.includes(keyword)
+        )
+
+        if (shouldFilter) {
+          console.log(`Filtered out: ${article.title}`)
+          continue
         }
+
+        headlines.push({
+          title: article.title,
+          link: article.url,
+          source: article.source?.name || 'Unknown',
+          created_at: new Date().toISOString(),
+        })
       }
+    } else {
+      console.warn('No articles in NewsAPI response')
     }
 
     // Clear old headlines and insert new ones
     if (headlines.length > 0) {
-      await supabaseAdmin.from('world_news').delete().neq('id', 0)
-      await supabaseAdmin.from('world_news').insert(headlines as any)
+      const { error: deleteError } = await supabaseAdmin.from('world_news').delete().neq('id', 0)
+      if (deleteError) {
+        console.error('Error deleting old world news:', deleteError)
+      }
+      
+      const { error: insertError } = await supabaseAdmin.from('world_news').insert(headlines as any)
+      if (insertError) {
+        console.error('Error inserting world news:', insertError)
+        return 0
+      }
+      
+      console.log(`Successfully saved ${headlines.length} world news headlines`)
+    } else {
+      console.warn('No headlines to save after filtering')
     }
 
-    console.log(`Scraped ${headlines.length} world news headlines`)
     return headlines.length
   } catch (error) {
     console.error('Error scraping world news:', error)

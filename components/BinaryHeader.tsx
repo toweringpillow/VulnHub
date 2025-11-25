@@ -49,22 +49,22 @@ export default function BinaryHeader() {
     return null
   }
 
-  // Calculate positions relative to viewport for fixed positioning
+  // Calculate positions relative to header area only (top 25% of viewport)
   const positions = [
-    { top: '10%', left: '5%', delay: '0s' },
-    { top: '20%', left: '85%', delay: '1s' },
-    { top: '40%', left: '10%', delay: '2s' },
-    { top: '60%', left: '90%', delay: '3s' },
-    { top: '80%', left: '15%', delay: '4s' },
-    { top: '30%', left: '70%', delay: '1.5s' },
-    { top: '50%', left: '25%', delay: '2.5s' },
-    { top: '70%', left: '80%', delay: '0.5s' },
-    { top: '15%', left: '50%', delay: '3.5s' },
-    { top: '85%', left: '60%', delay: '1.2s' },
-    { top: '35%', left: '40%', delay: '2.8s' },
-    { top: '55%', left: '65%', delay: '0.8s' },
-    { top: '75%', left: '35%', delay: '3.2s' },
-    { top: '25%', left: '95%', delay: '1.8s' },
+    { top: '5%', left: '5%', delay: '0s' },
+    { top: '8%', left: '85%', delay: '1s' },
+    { top: '12%', left: '10%', delay: '2s' },
+    { top: '15%', left: '90%', delay: '3s' },
+    { top: '18%', left: '15%', delay: '4s' },
+    { top: '10%', left: '70%', delay: '1.5s' },
+    { top: '13%', left: '25%', delay: '2.5s' },
+    { top: '16%', left: '80%', delay: '0.5s' },
+    { top: '7%', left: '50%', delay: '3.5s' },
+    { top: '20%', left: '60%', delay: '1.2s' },
+    { top: '11%', left: '40%', delay: '2.8s' },
+    { top: '14%', left: '65%', delay: '0.8s' },
+    { top: '17%', left: '35%', delay: '3.2s' },
+    { top: '9%', left: '95%', delay: '1.8s' },
   ]
 
   return (

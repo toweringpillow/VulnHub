@@ -134,8 +134,8 @@ export default function RootLayout({
         )}
       </head>
       <body className={`${inter.variable} font-sans antialiased`}>
-        {/* Binary bits - persistent across all pages */}
-        <div className="fixed inset-0 pointer-events-none z-0">
+        {/* Binary bits - constrained to header area only */}
+        <div className="fixed top-0 left-0 right-0 h-[25vh] pointer-events-none z-0 overflow-hidden">
           <BinaryHeader />
         </div>
         <RealTimeUpdates />
