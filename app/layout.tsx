@@ -135,8 +135,10 @@ export default function RootLayout({
       </head>
       <body className={`${inter.variable} font-sans antialiased`}>
         {/* Binary bits - constrained to header area only */}
-        <div className="fixed top-0 left-0 right-0 h-[25vh] pointer-events-none z-0 overflow-hidden">
-          <BinaryHeader />
+        <div className="fixed top-0 left-0 right-0 h-[25vh] pointer-events-none z-10 overflow-visible">
+          <div className="relative w-full h-full">
+            <BinaryHeader />
+          </div>
         </div>
         <RealTimeUpdates />
         <Toaster 
