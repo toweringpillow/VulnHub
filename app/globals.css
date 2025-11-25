@@ -48,36 +48,12 @@
 }
 
 @layer components {
-  /* Binary header animation */
+  /* Binary header animation - continuous floating */
   .binary-bit {
     @apply absolute text-orange-500/25 font-mono text-2xl pointer-events-none select-none;
-    animation: float 8s ease-in-out infinite;
+    animation: float-1 8s ease-in-out infinite;
     will-change: transform, opacity;
   }
-  
-  .binary-bit:nth-child(odd) {
-    animation-duration: 6s;
-  }
-  
-  .binary-bit:nth-child(even) {
-    animation-duration: 10s;
-  }
-  
-  /* Animation delays are now set via inline styles in the component */
-  .binary-bit.bit-1 { animation-delay: 0s; }
-  .binary-bit.bit-2 { animation-delay: 1s; }
-  .binary-bit.bit-3 { animation-delay: 2s; }
-  .binary-bit.bit-4 { animation-delay: 3s; }
-  .binary-bit.bit-5 { animation-delay: 4s; }
-  .binary-bit.bit-6 { animation-delay: 1.5s; }
-  .binary-bit.bit-7 { animation-delay: 2.5s; }
-  .binary-bit.bit-8 { animation-delay: 0.5s; }
-  .binary-bit.bit-9 { animation-delay: 3.5s; }
-  .binary-bit.bit-10 { animation-delay: 1.2s; }
-  .binary-bit.bit-11 { animation-delay: 2.8s; }
-  .binary-bit.bit-12 { animation-delay: 0.8s; }
-  .binary-bit.bit-13 { animation-delay: 3.2s; }
-  .binary-bit.bit-14 { animation-delay: 1.8s; }
   
   /* Card styles */
   .threat-card {
@@ -363,31 +339,80 @@
   }
 }
 
-/* Custom animations - continuous motion without stops */
-@keyframes float {
-  0% {
-    transform: translate(15px, 15px) rotate(0deg);
+/* Custom animations - multiple random paths for continuous floating motion */
+@keyframes float-1 {
+  0%, 100% {
+    transform: translate(20px, 10px) rotate(0deg);
+    opacity: 0.3;
+  }
+  25% {
+    transform: translate(-15px, 25px) rotate(90deg);
+    opacity: 0.5;
+  }
+  50% {
+    transform: translate(30px, -20px) rotate(180deg);
     opacity: 0.4;
+  }
+  75% {
+    transform: translate(-25px, 15px) rotate(270deg);
+    opacity: 0.6;
+  }
+}
+
+@keyframes float-2 {
+  0%, 100% {
+    transform: translate(-10px, 20px) rotate(45deg);
+    opacity: 0.4;
+  }
+  33% {
+    transform: translate(25px, -15px) rotate(165deg);
+    opacity: 0.5;
+  }
+  66% {
+    transform: translate(-20px, -25px) rotate(285deg);
+    opacity: 0.3;
+  }
+}
+
+@keyframes float-3 {
+  0%, 100% {
+    transform: translate(15px, -10px) rotate(90deg);
+    opacity: 0.5;
   }
   20% {
-    transform: translate(35px, -5px) rotate(72deg);
-    opacity: 0.6;
+    transform: translate(-30px, 20px) rotate(162deg);
+    opacity: 0.3;
   }
   40% {
-    transform: translate(15px, -25px) rotate(144deg);
-    opacity: 0.4;
-  }
-  60% {
-    transform: translate(-5px, -15px) rotate(216deg);
+    transform: translate(10px, 30px) rotate(234deg);
     opacity: 0.6;
   }
-  80% {
-    transform: translate(-15px, 5px) rotate(288deg);
+  60% {
+    transform: translate(25px, -25px) rotate(306deg);
     opacity: 0.4;
   }
-  100% {
-    transform: translate(15px, 15px) rotate(360deg);
+  80% {
+    transform: translate(-15px, 10px) rotate(378deg);
+    opacity: 0.5;
+  }
+}
+
+@keyframes float-4 {
+  0%, 100% {
+    transform: translate(-20px, -15px) rotate(135deg);
     opacity: 0.4;
+  }
+  30% {
+    transform: translate(35px, 25px) rotate(225deg);
+    opacity: 0.6;
+  }
+  60% {
+    transform: translate(-25px, 20px) rotate(315deg);
+    opacity: 0.3;
+  }
+  90% {
+    transform: translate(15px, -30px) rotate(405deg);
+    opacity: 0.5;
   }
 }
 

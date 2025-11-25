@@ -1,11 +1,15 @@
 import Link from 'next/link'
 import VLogo from './VLogo'
+import BinaryHeader from './BinaryHeader'
 import { SITE_NAME } from '@/lib/constants'
 
 export default function Header() {
   return (
     <header className="relative bg-gradient-cyber border-b border-dark-700 py-12 mb-8 overflow-hidden">
-      {/* Binary bits are now in layout.tsx to persist across navigations */}
+      {/* Binary bits contained within header */}
+      <div className="absolute inset-0 pointer-events-none z-0">
+        <BinaryHeader />
+      </div>
       
       <div className="container mx-auto px-4 relative z-10">
         <Link 

@@ -49,44 +49,37 @@ export default function BinaryHeader() {
     return null
   }
 
-  // Calculate positions to fill header area top to bottom (0% to 100% of container)
-  // Use random delays so bits are always moving, never all starting from stop
-  const getRandomDelay = (index: number) => {
-    // Use seeded random based on bit index for consistency, but vary it
-    const seed = Date.now() % 1000 + index
-    return `${(Math.sin(seed) * 10000 % 8).toFixed(1)}s` // Random delay 0-8s
+  // Generate random positions and animation variations for each bit
+  const getRandomValue = (index: number, min: number, max: number) => {
+    const seed = Date.now() % 10000 + index * 137
+    return min + (Math.sin(seed) * 10000 % 1) * (max - min)
   }
-  
-  const positions = [
-    { top: '2%', left: '5%' },
-    { top: '8%', left: '85%' },
-    { top: '15%', left: '10%' },
-    { top: '22%', left: '90%' },
-    { top: '30%', left: '15%' },
-    { top: '38%', left: '70%' },
-    { top: '45%', left: '25%' },
-    { top: '52%', left: '80%' },
-    { top: '60%', left: '50%' },
-    { top: '68%', left: '60%' },
-    { top: '75%', left: '40%' },
-    { top: '82%', left: '65%' },
-    { top: '90%', left: '35%' },
-    { top: '95%', left: '95%' },
-  ]
 
   return (
     <>
       {bits.map((bit, index) => {
-        const position = positions[index]
-        const randomDelay = getRandomDelay(index)
+        // Random starting position within header
+        const top = `${getRandomValue(index, 5, 95)}%`
+        const left = `${getRandomValue(index, 5, 95)}%`
+        
+        // Random delay so bits start at different animation phases
+        const delay = `${getRandomValue(index, 0, 8)}s`
+        
+        // Random animation duration for more variation (4-12 seconds)
+        const duration = `${getRandomValue(index, 4, 12)}s`
+        
+        // Random animation name (will use different paths)
+        const animationName = `float-${(index % 4) + 1}`
+        
         return (
           <div 
             key={`bit-${index}`} 
-            className={`binary-bit bit-${index + 1}`}
+            className="binary-bit"
             style={{
-              top: position?.top,
-              left: position?.left,
-              animationDelay: randomDelay,
+              top,
+              left,
+              animation: `${animationName} ${duration} ease-in-out infinite`,
+              animationDelay: delay,
             }}
           >
             {bit}
