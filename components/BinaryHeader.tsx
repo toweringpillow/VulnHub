@@ -62,11 +62,11 @@ export default function BinaryHeader() {
         const top = `${getRandomValue(index, 5, 95)}%`
         const left = `${getRandomValue(index, 5, 95)}%`
         
-        // Random delay so bits start at different animation phases
-        const delay = `${getRandomValue(index, 0, 8)}s`
+        // Very small random delay (0-0.3s) just to offset them slightly, but all start immediately
+        const delay = `${getRandomValue(index, 0, 0.3)}s`
         
-        // Random animation duration for more variation (4-12 seconds)
-        const duration = `${getRandomValue(index, 4, 12)}s`
+        // Random animation duration for more variation (5-10 seconds)
+        const duration = `${getRandomValue(index, 5, 10)}s`
         
         // Random animation name (will use different paths)
         const animationName = `float-${(index % 4) + 1}`
@@ -80,6 +80,7 @@ export default function BinaryHeader() {
               left,
               animation: `${animationName} ${duration} ease-in-out infinite`,
               animationDelay: delay,
+              opacity: 0.4, // Start visible, no fade-in
             }}
           >
             {bit}
