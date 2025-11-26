@@ -9,6 +9,7 @@ import {
   ARTICLE_CUTOFF_DAYS,
   DUPLICATE_CHECK_HOURS,
   PREDEFINED_TAGS,
+  SPONSORED_KEYWORDS,
 } from './constants'
 import { ScrapedArticle, ScrapeResult } from '@/types'
 
@@ -107,6 +108,18 @@ export async function scrapeArticles(): Promise<ScrapeResult> {
             continue
           }
 
+          // Filter out sponsored posts, deals, and advertisements
+          const combinedText = `${title} ${summary}`.toLowerCase()
+          const isSponsored = SPONSORED_KEYWORDS.some((keyword) =>
+            combinedText.includes(keyword.toLowerCase())
+          )
+
+          if (isSponsored) {
+            console.log(`Filtered out sponsored/advertisement: ${title}`)
+            result.articlesSkipped++
+            continue
+          }
+
           // Check for CVE and "In the Wild" indicators before AI analysis
           const cvePattern = /CVE-\d{4}-\d+/i
           const hasCVE = cvePattern.test(title) || cvePattern.test(summary)
@@ -115,6 +128,13 @@ export async function scrapeArticles(): Promise<ScrapeResult> {
 
           // Analyze with AI (pass context about CVE/In the Wild)
           const aiResult = await analyzeArticle(title, link, summary, hasCVE, hasInWildTag)
+
+          // Skip if AI detected sponsored content
+          if (!aiResult) {
+            console.log(`Skipping article (sponsored/promotional detected): ${title}`)
+            result.articlesSkipped++
+            continue
+          }
 
           // Match tags
           const articleTags: number[] = []
@@ -139,6 +159,7 @@ export async function scrapeArticles(): Promise<ScrapeResult> {
           }
 
           // Prepare article for insertion
+          // Note: aiResult is guaranteed to be non-null here due to check above
           const article = {
             title,
             original_link: link,
@@ -147,12 +168,12 @@ export async function scrapeArticles(): Promise<ScrapeResult> {
             created_at: now.toISOString(),
             content_hash: contentHash,
             original_summary: summary,
-            ai_summary: aiResult?.ai_summary || null,
-            impact: aiResult?.impact || null,
-            in_wild: aiResult?.in_wild || null,
-            age: aiResult?.age || null,
-            remediation: aiResult?.remediation || null,
-            ai_retry_count: aiResult ? 0 : 1,
+            ai_summary: aiResult.ai_summary || null,
+            impact: aiResult.impact || null,
+            in_wild: aiResult.in_wild || null,
+            age: aiResult.age || null,
+            remediation: aiResult.remediation || null,
+            ai_retry_count: 0, // Successfully analyzed
           }
 
           newArticles.push({ article, tags: articleTags })

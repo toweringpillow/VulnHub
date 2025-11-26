@@ -17,6 +17,7 @@ export interface FeedSource {
 
 // OpenAI response types
 export interface AIAnalysisResult {
+  is_sponsored?: boolean // True if article is promotional/sponsored content
   ai_summary: string
   impact: string
   in_wild: 'Yes' | 'No' | 'Unknown'

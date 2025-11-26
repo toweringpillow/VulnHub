@@ -226,6 +226,70 @@ export const MAX_HEADLINES = 25
 export const ARTICLE_CUTOFF_DAYS = parseInt(process.env.ARTICLE_CUTOFF_DAYS || '5', 10)
 export const DUPLICATE_CHECK_HOURS = 48
 
+// Keywords to filter out sponsored posts, deals, and advertisements
+export const SPONSORED_KEYWORDS = [
+  // Deal/Promotion keywords
+  'black friday',
+  'cyber monday',
+  'holiday sale',
+  'deal',
+  'deals',
+  'discount',
+  'discounts',
+  '% off',
+  'percent off',
+  'save',
+  'sale',
+  'promo',
+  'promotion',
+  'coupon',
+  'coupon code',
+  'special offer',
+  'limited time',
+  'limited offer',
+  'exclusive deal',
+  'best price',
+  'lowest price',
+  'price drop',
+  
+  // Sponsored/Advertisement keywords
+  'sponsored',
+  'advertisement',
+  'advertorial',
+  'promoted post',
+  'paid content',
+  'affiliate link',
+  'affiliate',
+  'partner content',
+  'ad',
+  'ads',
+  
+  // Product promotion keywords (common in cybersecurity feeds)
+  'vpn deal',
+  'vpn discount',
+  'antivirus deal',
+  'security software deal',
+  'software sale',
+  'software discount',
+  'subscription deal',
+  'free trial',
+  'try for free',
+  'sign up now',
+  'get started',
+  'buy now',
+  'shop now',
+  'order now',
+  
+  // Generic promotional phrases
+  'don\'t miss',
+  'act now',
+  'hurry',
+  'while supplies last',
+  'limited stock',
+  'today only',
+  'this week only',
+]
+
 // Predefined tags (should match database seed)
 export const PREDEFINED_TAGS = [
   'Windows',

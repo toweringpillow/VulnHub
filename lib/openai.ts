@@ -49,8 +49,18 @@ Article Content:
 ${cleanedSummary}
 
 ---
-Analyze the provided cybersecurity article content. Based **only** on the text above, extract the following information.
-**Important: You must respond in valid JSON format.** Your entire response must be a single JSON object with the following keys:
+**IMPORTANT: First, determine if this is a legitimate cybersecurity threat article or if it's a sponsored post, advertisement, deal, or promotional content.**
+
+If this article is:
+- A product deal, discount, sale, or promotion (e.g., "VPN Deal", "Black Friday", "% off")
+- A sponsored post or advertisement
+- A product review or software recommendation that's promotional
+- Not about an actual cybersecurity threat, vulnerability, or security incident
+
+Then respond with: {"is_sponsored": true, "ai_summary": "This appears to be promotional content, not a cybersecurity threat."}
+
+If this is a legitimate cybersecurity article about threats, vulnerabilities, breaches, or security incidents, analyze it and provide the following information in valid JSON format:
+- "is_sponsored": false
 - "ai_summary": A brief summary (2-3 sentences) focusing on the core issue, severity, and key implications.
 - "impact": A string listing the main affected products, vendors, systems, or versions. Be specific and comprehensive. If none can be determined, value should be "Not specified".
 - "in_wild": A string indicating if the vulnerability is actively exploited. Answer only "Yes", "No", or "Unknown". Look for phrases like "actively exploited", "in the wild", "active exploitation", "zero-day exploit".
@@ -75,6 +85,12 @@ Analyze the provided cybersecurity article content. Based **only** on the text a
 
     // Parse JSON response
     const parsed = JSON.parse(content) as AIAnalysisResult
+
+    // Check if article is sponsored/promotional
+    if (parsed.is_sponsored === true) {
+      console.log('OpenAI detected sponsored/promotional content')
+      return null // Return null to skip this article
+    }
 
     // Validate required fields
     if (!parsed.ai_summary || !parsed.ai_summary.trim()) {
