@@ -4,6 +4,7 @@ import './globals.css'
 import { SITE_NAME, SITE_DESCRIPTION, SITE_URL, ADSENSE_CLIENT_ID } from '@/lib/constants'
 import Script from 'next/script'
 import { Analytics } from '@vercel/analytics/react'
+import { Suspense } from 'react'
 import RealTimeUpdates from '@/components/RealTimeUpdates'
 import { Toaster } from 'react-hot-toast'
 import StructuredData from '@/components/StructuredData'
@@ -134,7 +135,9 @@ export default function RootLayout({
         )}
       </head>
       <body className={`${inter.variable} font-sans antialiased`}>
-        <TrendingBanner />
+        <Suspense fallback={null}>
+          <TrendingBanner />
+        </Suspense>
         <RealTimeUpdates />
         <Toaster 
           position="top-right"

@@ -13,12 +13,18 @@ interface TrendingKeyword {
 export default function TrendingBanner() {
   const [trending, setTrending] = useState<TrendingKeyword[]>([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [mounted, setMounted] = useState(false)
+
+  // Only render on client to avoid hydration issues
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   useEffect(() => {
+    if (!mounted) return
+
     async function fetchTrending() {
       try {
-        setError(null)
         const response = await fetch('/api/reddit/trending', {
           cache: 'no-store',
         })
@@ -29,14 +35,11 @@ export default function TrendingBanner() {
         
         const data = await response.json()
 
-        if (data.success && data.data && data.data.length > 0) {
+        if (data.success && Array.isArray(data.data) && data.data.length > 0) {
           setTrending(data.data)
-        } else {
-          console.warn('No trending data received:', data)
         }
       } catch (error) {
         console.error('Error fetching trending keywords:', error)
-        setError(error instanceof Error ? error.message : 'Unknown error')
       } finally {
         setLoading(false)
       }
@@ -47,15 +50,15 @@ export default function TrendingBanner() {
     const interval = setInterval(fetchTrending, 5 * 60 * 1000)
 
     return () => clearInterval(interval)
-  }, [])
+  }, [mounted])
 
-  // Show loading state briefly, then hide if no data
-  if (loading) {
-    return null // Don't show loading state to avoid flash
+  // Don't render until mounted on client to avoid hydration issues
+  if (!mounted) {
+    return null
   }
-  
-  // Don't show banner if no trending data
-  if (trending.length === 0) {
+
+  // Don't show banner if loading or no trending data
+  if (loading || trending.length === 0) {
     return null
   }
 
