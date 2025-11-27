@@ -74,6 +74,7 @@ const config: Config = {
         'slide-down': 'slideDown 0.5s ease-out',
         'fade-in': 'fadeIn 0.5s ease-in',
         'ticker': 'ticker 30s linear infinite',
+        'scroll': 'scroll 60s linear infinite',
         'flicker': 'flicker 8s ease-in-out infinite',
       },
       keyframes: {
@@ -97,6 +98,10 @@ const config: Config = {
         },
         ticker: {
           '0%': { transform: 'translateX(0%)' },
+          '100%': { transform: 'translateX(-50%)' },
+        },
+        scroll: {
+          '0%': { transform: 'translateX(0)' },
           '100%': { transform: 'translateX(-50%)' },
         },
         flicker: {

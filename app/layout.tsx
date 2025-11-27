@@ -7,6 +7,7 @@ import { Analytics } from '@vercel/analytics/react'
 import RealTimeUpdates from '@/components/RealTimeUpdates'
 import { Toaster } from 'react-hot-toast'
 import StructuredData from '@/components/StructuredData'
+import TrendingBanner from '@/components/TrendingBanner'
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
 
@@ -133,6 +134,7 @@ export default function RootLayout({
         )}
       </head>
       <body className={`${inter.variable} font-sans antialiased`}>
+        <TrendingBanner />
         <RealTimeUpdates />
         <Toaster 
           position="top-right"
