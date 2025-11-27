@@ -4,11 +4,15 @@ import './globals.css'
 import { SITE_NAME, SITE_DESCRIPTION, SITE_URL, ADSENSE_CLIENT_ID } from '@/lib/constants'
 import Script from 'next/script'
 import { Analytics } from '@vercel/analytics/react'
-import { Suspense } from 'react'
+import dynamic from 'next/dynamic'
 import RealTimeUpdates from '@/components/RealTimeUpdates'
 import { Toaster } from 'react-hot-toast'
 import StructuredData from '@/components/StructuredData'
-import TrendingBanner from '@/components/TrendingBanner'
+
+// Dynamically import TrendingBanner with SSR disabled to prevent hydration errors
+const TrendingBanner = dynamic(() => import('@/components/TrendingBanner'), {
+  ssr: false,
+})
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
 
@@ -135,9 +139,7 @@ export default function RootLayout({
         )}
       </head>
       <body className={`${inter.variable} font-sans antialiased`}>
-        <Suspense fallback={null}>
-          <TrendingBanner />
-        </Suspense>
+        <TrendingBanner />
         <RealTimeUpdates />
         <Toaster 
           position="top-right"

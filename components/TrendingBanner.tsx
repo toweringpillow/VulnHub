@@ -13,16 +13,8 @@ interface TrendingKeyword {
 export default function TrendingBanner() {
   const [trending, setTrending] = useState<TrendingKeyword[]>([])
   const [loading, setLoading] = useState(true)
-  const [mounted, setMounted] = useState(false)
-
-  // Only render on client to avoid hydration issues
-  useEffect(() => {
-    setMounted(true)
-  }, [])
 
   useEffect(() => {
-    if (!mounted) return
-
     async function fetchTrending() {
       try {
         const response = await fetch('/api/reddit/trending', {
@@ -50,12 +42,7 @@ export default function TrendingBanner() {
     const interval = setInterval(fetchTrending, 5 * 60 * 1000)
 
     return () => clearInterval(interval)
-  }, [mounted])
-
-  // Don't render until mounted on client to avoid hydration issues
-  if (!mounted) {
-    return null
-  }
+  }, [])
 
   // Don't show banner if loading or no trending data
   if (loading || trending.length === 0) {
