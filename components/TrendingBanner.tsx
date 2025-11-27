@@ -49,8 +49,13 @@ export default function TrendingBanner() {
     return () => clearInterval(interval)
   }, [])
 
-  // Don't show anything if loading or no data (silent fail for now)
-  if (loading || trending.length === 0) {
+  // Show loading state briefly, then hide if no data
+  if (loading) {
+    return null // Don't show loading state to avoid flash
+  }
+  
+  // Don't show banner if no trending data
+  if (trending.length === 0) {
     return null
   }
 
