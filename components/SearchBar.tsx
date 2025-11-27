@@ -27,12 +27,15 @@ export default function SearchBar() {
     <form onSubmit={handleSubmit} className="w-full max-w-3xl mx-auto mb-8">
       <div className="relative">
         <input
-          type="text"
+          type="search"
+          id="search-query"
+          name="q"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search threats by title, summary, or impact..."
           className="search-input pl-12 pr-24"
           aria-label="Search threats"
+          autoComplete="off"
         />
         
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
