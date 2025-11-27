@@ -17,21 +17,33 @@ export default function TrendingBanner() {
   useEffect(() => {
     async function fetchTrending() {
       try {
+        console.log('[TrendingBanner] Fetching trending keywords...')
         const response = await fetch('/api/reddit/trending', {
           cache: 'no-store',
         })
         
         if (!response.ok) {
+          const errorText = await response.text()
+          console.error(`[TrendingBanner] API error ${response.status}:`, errorText)
           throw new Error(`API returned ${response.status}`)
         }
         
         const data = await response.json()
+        console.log('[TrendingBanner] API response:', {
+          success: data.success,
+          count: data.count || data.data?.length || 0,
+          duration: data.duration,
+          sample: data.data?.slice(0, 3),
+        })
 
         if (data.success && Array.isArray(data.data) && data.data.length > 0) {
+          console.log(`[TrendingBanner] Setting ${data.data.length} trending keywords`)
           setTrending(data.data)
+        } else {
+          console.warn('[TrendingBanner] No trending data received:', data)
         }
       } catch (error) {
-        console.error('Error fetching trending keywords:', error)
+        console.error('[TrendingBanner] Error fetching trending keywords:', error)
       } finally {
         setLoading(false)
       }

@@ -174,27 +174,43 @@ export async function getTrendingKeywords(
   try {
     // Fetch posts from multiple subreddits in parallel (limit to 5 to avoid rate limits)
     const subredditsToFetch = subreddits.slice(0, 5)
+    console.log(`Fetching from ${subredditsToFetch.length} subreddits: ${subredditsToFetch.join(', ')}`)
+    
     const postPromises = subredditsToFetch.map((subreddit) =>
       fetchSubredditPosts(subreddit, 25)
     )
 
     const postArrays = await Promise.allSettled(postPromises)
-    const allPosts = postArrays
-      .filter((result) => result.status === 'fulfilled')
-      .flatMap((result) => (result.status === 'fulfilled' ? result.value : []))
+    
+    // Log results for each subreddit
+    const results = postArrays.map((result, index) => {
+      if (result.status === 'fulfilled') {
+        console.log(`✓ r/${subredditsToFetch[index]}: ${result.value.length} posts`)
+        return result.value
+      } else {
+        console.warn(`✗ r/${subredditsToFetch[index]}: ${result.reason}`)
+        return []
+      }
+    })
+    
+    const allPosts = results.flat()
 
     if (allPosts.length === 0) {
-      console.warn('No posts fetched from Reddit')
+      console.warn('No posts fetched from Reddit - all subreddits may have failed')
       return []
     }
+
+    console.log(`Total posts fetched: ${allPosts.length}`)
 
     // Analyze posts for keywords
     const keywordCounts = analyzePosts(allPosts)
 
     if (keywordCounts.size === 0) {
-      console.warn('No keywords found in posts')
+      console.warn('No keywords found in posts - posts may not contain cybersecurity keywords')
       return []
     }
+
+    console.log(`Found ${keywordCounts.size} unique keywords`)
 
     // Convert to array and sort by score
     const trending = Array.from(keywordCounts.entries())
