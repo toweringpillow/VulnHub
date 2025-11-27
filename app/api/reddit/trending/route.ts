@@ -4,6 +4,7 @@ import { getTrendingKeywords } from '@/lib/reddit'
 // Cache for 5 minutes
 export const revalidate = 300
 export const dynamic = 'force-dynamic'
+export const maxDuration = 30 // Allow up to 30 seconds for Reddit API calls
 
 /**
  * GET /api/reddit/trending
@@ -11,7 +12,10 @@ export const dynamic = 'force-dynamic'
  */
 export async function GET() {
   try {
+    console.log('Fetching trending keywords from Reddit...')
     const trending = await getTrendingKeywords(undefined, 15)
+    
+    console.log(`Found ${trending.length} trending keywords`)
 
     return NextResponse.json({
       success: true,
@@ -20,11 +24,14 @@ export async function GET() {
     })
   } catch (error) {
     console.error('Error fetching trending keywords:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    
     return NextResponse.json(
       {
         success: false,
-        error: 'Failed to fetch trending keywords',
+        error: errorMessage,
         data: [],
+        timestamp: new Date().toISOString(),
       },
       { status: 500 }
     )

@@ -85,21 +85,41 @@ async function fetchSubredditPosts(
 ): Promise<RedditPost[]> {
   try {
     const url = `https://www.reddit.com/r/${subreddit}/hot.json?limit=${limit}`
+    
+    // Add timeout to prevent hanging
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
+    
     const response = await fetch(url, {
       headers: {
         'User-Agent': 'VulnHub/1.0 (Cybersecurity News Aggregator)',
+        'Accept': 'application/json',
       },
+      signal: controller.signal,
+      next: { revalidate: 300 }, // Cache for 5 minutes
     })
 
+    clearTimeout(timeoutId)
+
     if (!response.ok) {
-      console.error(`Failed to fetch from r/${subreddit}: ${response.statusText}`)
+      console.error(`Failed to fetch from r/${subreddit}: ${response.status} ${response.statusText}`)
       return []
     }
 
     const data: RedditResponse = await response.json()
+    
+    if (!data?.data?.children) {
+      console.warn(`Invalid response from r/${subreddit}`)
+      return []
+    }
+    
     return data.data.children.map((child) => child.data)
   } catch (error) {
-    console.error(`Error fetching r/${subreddit}:`, error)
+    if (error instanceof Error && error.name === 'AbortError') {
+      console.error(`Timeout fetching r/${subreddit}`)
+    } else {
+      console.error(`Error fetching r/${subreddit}:`, error)
+    }
     return []
   }
 }
@@ -152,16 +172,29 @@ export async function getTrendingKeywords(
   limit: number = 10
 ): Promise<Array<{ keyword: string; score: number; count: number }>> {
   try {
-    // Fetch posts from multiple subreddits in parallel
-    const postPromises = subreddits.slice(0, 10).map((subreddit) =>
+    // Fetch posts from multiple subreddits in parallel (limit to 5 to avoid rate limits)
+    const subredditsToFetch = subreddits.slice(0, 5)
+    const postPromises = subredditsToFetch.map((subreddit) =>
       fetchSubredditPosts(subreddit, 25)
     )
 
-    const postArrays = await Promise.all(postPromises)
-    const allPosts = postArrays.flat()
+    const postArrays = await Promise.allSettled(postPromises)
+    const allPosts = postArrays
+      .filter((result) => result.status === 'fulfilled')
+      .flatMap((result) => (result.status === 'fulfilled' ? result.value : []))
+
+    if (allPosts.length === 0) {
+      console.warn('No posts fetched from Reddit')
+      return []
+    }
 
     // Analyze posts for keywords
     const keywordCounts = analyzePosts(allPosts)
+
+    if (keywordCounts.size === 0) {
+      console.warn('No keywords found in posts')
+      return []
+    }
 
     // Convert to array and sort by score
     const trending = Array.from(keywordCounts.entries())

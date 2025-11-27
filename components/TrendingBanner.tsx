@@ -13,18 +13,30 @@ interface TrendingKeyword {
 export default function TrendingBanner() {
   const [trending, setTrending] = useState<TrendingKeyword[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     async function fetchTrending() {
       try {
-        const response = await fetch('/api/reddit/trending')
+        setError(null)
+        const response = await fetch('/api/reddit/trending', {
+          cache: 'no-store',
+        })
+        
+        if (!response.ok) {
+          throw new Error(`API returned ${response.status}`)
+        }
+        
         const data = await response.json()
 
-        if (data.success && data.data.length > 0) {
+        if (data.success && data.data && data.data.length > 0) {
           setTrending(data.data)
+        } else {
+          console.warn('No trending data received:', data)
         }
       } catch (error) {
         console.error('Error fetching trending keywords:', error)
+        setError(error instanceof Error ? error.message : 'Unknown error')
       } finally {
         setLoading(false)
       }
@@ -37,6 +49,7 @@ export default function TrendingBanner() {
     return () => clearInterval(interval)
   }, [])
 
+  // Don't show anything if loading or no data (silent fail for now)
   if (loading || trending.length === 0) {
     return null
   }
