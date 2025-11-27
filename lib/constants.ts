@@ -225,6 +225,9 @@ export const MAX_ARTICLES_PER_RUN = parseInt(process.env.MAX_ARTICLES_PER_RUN ||
 export const MAX_HEADLINES = 25
 export const ARTICLE_CUTOFF_DAYS = parseInt(process.env.ARTICLE_CUTOFF_DAYS || '5', 10)
 export const DUPLICATE_CHECK_HOURS = 48
+// Deduplication window: check for duplicates within this many days (default: 2 days)
+// Articles about the same breach/vulnerability beyond this window will be allowed (e.g., updates months later)
+export const DEDUPLICATION_WINDOW_DAYS = parseInt(process.env.DEDUPLICATION_WINDOW_DAYS || '2', 10)
 
 // Keywords to filter out sponsored posts, deals, and advertisements
 export const SPONSORED_KEYWORDS = [

@@ -8,6 +8,7 @@ import {
   MAX_ARTICLES_PER_RUN,
   ARTICLE_CUTOFF_DAYS,
   DUPLICATE_CHECK_HOURS,
+  DEDUPLICATION_WINDOW_DAYS,
   PREDEFINED_TAGS,
   SPONSORED_KEYWORDS,
 } from './constants'
@@ -18,6 +19,217 @@ const parser = new Parser({
     item: [['pubDate', 'published'], ['description', 'summary']],
   },
 })
+
+/**
+ * Extract breach/vulnerability signature from article
+ * Returns a normalized string that identifies the same breach/vulnerability
+ */
+function extractBreachSignature(title: string, summary: string, aiSummary?: string | null): string {
+  const text = `${title} ${summary} ${aiSummary || ''}`.toLowerCase()
+  
+  // Extract CVE numbers (strongest identifier)
+  const cvePattern = /cve-\d{4}-\d+/gi
+  const cves = [...text.matchAll(cvePattern)].map(m => m[0].toUpperCase())
+  
+  // Extract company/organization names (common patterns)
+  const companyPatterns = [
+    /\b(microsoft|msft|windows)\b/gi,
+    /\b(apple|ios|macos|iphone)\b/gi,
+    /\b(google|android|chrome)\b/gi,
+    /\b(amazon|aws)\b/gi,
+    /\b(meta|facebook)\b/gi,
+    /\b(twitter|x\.com)\b/gi,
+    /\b(linkedin)\b/gi,
+    /\b(tesla)\b/gi,
+    /\b(nvidia)\b/gi,
+    /\b(intel)\b/gi,
+    /\b(amd)\b/gi,
+    /\b(cisco)\b/gi,
+    /\b(fortinet)\b/gi,
+    /\b(palo alto)\b/gi,
+    /\b(vmware)\b/gi,
+    /\b(oracle)\b/gi,
+    /\b(adobe)\b/gi,
+    /\b(apache)\b/gi,
+    /\b(nginx)\b/gi,
+    /\b(redis)\b/gi,
+    /\b(mongodb)\b/gi,
+    /\b(mysql)\b/gi,
+    /\b(postgresql|postgres)\b/gi,
+  ]
+  
+  const companies: string[] = []
+  for (const pattern of companyPatterns) {
+    const matches = [...text.matchAll(pattern)]
+    for (const match of matches) {
+      const company = match[0].toLowerCase()
+      if (!companies.includes(company)) {
+        companies.push(company)
+      }
+    }
+  }
+  
+  // Extract key breach/vulnerability terms
+  const breachTerms: string[] = []
+  const breachPatterns = [
+    /\b(data breach|breach)\b/gi,
+    /\b(ransomware|ransom)\b/gi,
+    /\b(phishing)\b/gi,
+    /\b(zero.?day|0day)\b/gi,
+    /\b(exploit|exploitation)\b/gi,
+    /\b(vulnerability|vuln)\b/gi,
+    /\b(patch|update|fix)\b/gi,
+  ]
+  
+  for (const pattern of breachPatterns) {
+    const matches = [...text.matchAll(pattern)]
+    for (const match of matches) {
+      const term = match[0].toLowerCase()
+      if (!breachTerms.includes(term)) {
+        breachTerms.push(term)
+      }
+    }
+  }
+  
+  // Create signature: CVE first (most specific), then companies, then terms
+  const signatureParts: string[] = []
+  
+  if (cves.length > 0) {
+    signatureParts.push(`cve:${cves.sort().join(',')}`)
+  }
+  
+  if (companies.length > 0) {
+    signatureParts.push(`company:${companies.sort().join(',')}`)
+  }
+  
+  if (breachTerms.length > 0) {
+    signatureParts.push(`terms:${breachTerms.sort().join(',')}`)
+  }
+  
+  // If we have a CVE, that's our primary signature
+  if (cves.length > 0) {
+    return signatureParts[0] // Just the CVE part
+  }
+  
+  // Otherwise, use company + terms combination
+  if (signatureParts.length > 0) {
+    return signatureParts.join('|')
+  }
+  
+  // Fallback: use normalized title (first 5 words, lowercase, no special chars)
+  const normalizedTitle = title
+    .toLowerCase()
+    .replace(/[^\w\s]/g, ' ')
+    .split(/\s+/)
+    .slice(0, 5)
+    .join(' ')
+  
+  return `title:${normalizedTitle}`
+}
+
+/**
+ * Check if two breach signatures are similar enough to be considered duplicates
+ */
+function areSignaturesSimilar(sig1: string, sig2: string): boolean {
+  if (sig1 === sig2) return true
+  
+  // If both have CVE, they must match exactly
+  if (sig1.startsWith('cve:') && sig2.startsWith('cve:')) {
+    return sig1 === sig2
+  }
+  
+  // Extract components
+  const parts1 = sig1.split('|')
+  const parts2 = sig2.split('|')
+  
+  // Check for CVE matches
+  const cve1 = parts1.find(p => p.startsWith('cve:'))
+  const cve2 = parts2.find(p => p.startsWith('cve:'))
+  if (cve1 && cve2) {
+    return cve1 === cve2
+  }
+  
+  // Check company overlap (if both have companies)
+  const company1 = parts1.find(p => p.startsWith('company:'))
+  const company2 = parts2.find(p => p.startsWith('company:'))
+  if (company1 && company2) {
+    const companies1 = company1.replace('company:', '').split(',')
+    const companies2 = company2.replace('company:', '').split(',')
+    const overlap = companies1.filter(c => companies2.includes(c))
+    // If significant company overlap, consider similar
+    if (overlap.length > 0 && overlap.length >= Math.min(companies1.length, companies2.length) * 0.5) {
+      return true
+    }
+  }
+  
+  // Check title similarity (for fallback signatures)
+  if (sig1.startsWith('title:') && sig2.startsWith('title:')) {
+    const title1 = sig1.replace('title:', '')
+    const title2 = sig2.replace('title:', '')
+    const words1 = new Set(title1.split(' '))
+    const words2 = new Set(title2.split(' '))
+    const intersection = new Set([...words1].filter(x => words2.has(x)))
+    const union = new Set([...words1, ...words2])
+    const similarity = intersection.size / union.size
+    // If >60% word overlap, consider similar
+    return similarity > 0.6
+  }
+  
+  return false
+}
+
+/**
+ * Check if an article is a duplicate of existing articles within the deduplication window
+ * (default: 2 days). This prevents multiple posts about the same breach/vulnerability
+ * within a short timeframe, but allows the same CVE/breach to be posted again months later
+ * (e.g., for updates, patches, or new developments).
+ */
+async function isDuplicateWithinWindow(
+  title: string,
+  summary: string,
+  aiSummary: string | null,
+  publishedDate: Date
+): Promise<boolean> {
+  // Calculate the deduplication window (e.g., 2 days back from published date)
+  const windowStart = new Date(publishedDate)
+  windowStart.setDate(windowStart.getDate() - DEDUPLICATION_WINDOW_DAYS)
+  windowStart.setHours(0, 0, 0, 0)
+  
+  const windowEnd = new Date(publishedDate)
+  windowEnd.setHours(23, 59, 59, 999)
+  
+  // Get all articles within the deduplication window
+  const { data: windowArticles } = await supabaseAdmin
+    .from('articles')
+    .select('title, original_summary, ai_summary, published_date')
+    .gte('published_date', windowStart.toISOString())
+    .lte('published_date', windowEnd.toISOString())
+  
+  if (!windowArticles || windowArticles.length === 0) {
+    return false
+  }
+  
+  // Generate signature for the new article
+  const newSignature = extractBreachSignature(title, summary, aiSummary)
+  
+  // Check against existing articles within the window
+  for (const article of windowArticles) {
+    const existingSignature = extractBreachSignature(
+      article.title,
+      article.original_summary || '',
+      article.ai_summary
+    )
+    
+    if (areSignaturesSimilar(newSignature, existingSignature)) {
+      const articleDate = new Date(article.published_date).toISOString().split('T')[0]
+      const newDate = publishedDate.toISOString().split('T')[0]
+      console.log(`Duplicate detected within ${DEDUPLICATION_WINDOW_DAYS}-day window: "${title}" (${newDate}) matches "${article.title}" (${articleDate})`)
+      return true
+    }
+  }
+  
+  return false
+}
 
 /**
  * Scrape articles from all RSS feeds
@@ -64,6 +276,9 @@ export async function scrapeArticles(): Promise<ScrapeResult> {
 
     // Scrape each feed
     const newArticles: any[] = []
+    // Track signatures of articles processed in this batch (for same-day deduplication)
+    // Key: day (YYYY-MM-DD), Value: array of signatures for that day
+    const batchSignaturesByDay = new Map<string, Array<{ signature: string; title: string }>>()
 
     for (const feed of ARTICLE_FEEDS) {
       if (newArticles.length >= MAX_ARTICLES_PER_RUN) break
@@ -135,6 +350,58 @@ export async function scrapeArticles(): Promise<ScrapeResult> {
             result.articlesSkipped++
             continue
           }
+
+          // Check for duplicate breach/vulnerability within the deduplication window (e.g., 2 days)
+          // First check against database
+          const isDuplicateInDB = await isDuplicateWithinWindow(
+            title,
+            summary,
+            aiResult.ai_summary,
+            publishedDate
+          )
+          
+          if (isDuplicateInDB) {
+            console.log(`Skipping duplicate article within ${DEDUPLICATION_WINDOW_DAYS}-day window (in DB): ${title}`)
+            result.articlesSkipped++
+            continue
+          }
+          
+          // Also check against articles processed in this batch
+          const articleSignature = extractBreachSignature(title, summary, aiResult.ai_summary)
+          const articleDate = publishedDate
+          
+          // Check if we've already processed a similar article within the window in this batch
+          let isDuplicateInBatch = false
+          
+          for (const [dayKey, signatures] of batchSignaturesByDay.entries()) {
+            // Parse the day key (YYYY-MM-DD) and compare dates
+            const batchDay = new Date(dayKey + 'T00:00:00Z')
+            const daysDiff = Math.abs(articleDate.getTime() - batchDay.getTime()) / (1000 * 60 * 60 * 24)
+            
+            // Only check articles within the deduplication window (including same day)
+            if (daysDiff <= DEDUPLICATION_WINDOW_DAYS) {
+              for (const batchItem of signatures) {
+                if (areSignaturesSimilar(articleSignature, batchItem.signature)) {
+                  console.log(`Skipping duplicate article within ${DEDUPLICATION_WINDOW_DAYS}-day window (in batch): "${title}" matches "${batchItem.title}"`)
+                  result.articlesSkipped++
+                  isDuplicateInBatch = true
+                  break
+                }
+              }
+              if (isDuplicateInBatch) break
+            }
+          }
+          
+          if (isDuplicateInBatch) {
+            continue
+          }
+          
+          // Add to batch signatures for future checks
+          const dayKey = publishedDate.toISOString().split('T')[0] // YYYY-MM-DD
+          if (!batchSignaturesByDay.has(dayKey)) {
+            batchSignaturesByDay.set(dayKey, [])
+          }
+          batchSignaturesByDay.get(dayKey)!.push({ signature: articleSignature, title })
 
           // Match tags
           const articleTags: number[] = []
