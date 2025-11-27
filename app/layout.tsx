@@ -144,8 +144,7 @@ export default function RootLayout({
         )}
       </head>
       <body className={`${inter.variable} font-sans antialiased`}>
-        {/* Temporarily disabled to debug hydration errors */}
-        {/* <TrendingBanner /> */}
+        <TrendingBanner />
         <RealTimeUpdates />
         <Toaster 
           position="top-right"
