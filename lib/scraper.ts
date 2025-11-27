@@ -9,10 +9,9 @@ import {
   ARTICLE_CUTOFF_DAYS,
   DUPLICATE_CHECK_HOURS,
   DEDUPLICATION_WINDOW_DAYS,
-  PREDEFINED_TAGS,
   SPONSORED_KEYWORDS,
 } from './constants'
-import { ScrapedArticle, ScrapeResult } from '@/types'
+import { ScrapeResult } from '@/types'
 
 const parser = new Parser({
   customFields: {
@@ -213,7 +212,12 @@ async function isDuplicateWithinWindow(
   const newSignature = extractBreachSignature(title, summary, aiSummary)
   
   // Check against existing articles within the window
-  for (const article of windowArticles) {
+  for (const article of windowArticles as Array<{
+    title: string
+    original_summary: string | null
+    ai_summary: string | null
+    published_date: string
+  }>) {
     const existingSignature = extractBreachSignature(
       article.title,
       article.original_summary || '',
@@ -246,9 +250,6 @@ export async function scrapeArticles(): Promise<ScrapeResult> {
     // Calculate cutoff dates
     const now = new Date()
     const articleCutoff = new Date(now.getTime() - ARTICLE_CUTOFF_DAYS * 24 * 60 * 60 * 1000)
-    const duplicateCheckCutoff = new Date(
-      now.getTime() - DUPLICATE_CHECK_HOURS * 60 * 60 * 1000
-    )
 
     // Get existing links and hashes to avoid duplicates
     const { data: existingArticles } = await supabaseAdmin
