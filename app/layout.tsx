@@ -10,9 +10,14 @@ import { Toaster } from 'react-hot-toast'
 import StructuredData from '@/components/StructuredData'
 
 // Dynamically import TrendingBanner with SSR disabled to prevent hydration errors
-const TrendingBanner = dynamic(() => import('@/components/TrendingBanner'), {
-  ssr: false,
-})
+// Using a wrapper to ensure it only renders on client
+const TrendingBanner = dynamic(
+  () => import('@/components/TrendingBanner').then((mod) => mod.default),
+  {
+    ssr: false,
+    loading: () => null,
+  }
+)
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
 
@@ -139,7 +144,8 @@ export default function RootLayout({
         )}
       </head>
       <body className={`${inter.variable} font-sans antialiased`}>
-        <TrendingBanner />
+        {/* Temporarily disabled to debug hydration errors */}
+        {/* <TrendingBanner /> */}
         <RealTimeUpdates />
         <Toaster 
           position="top-right"
