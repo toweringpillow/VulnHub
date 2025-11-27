@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useState, useEffect } from 'react'
 
 // Use a seeded random function to generate consistent bits
 function seededRandom(seed: number) {
@@ -8,10 +8,9 @@ function seededRandom(seed: number) {
   return x - Math.floor(x)
 }
 
-// Initialize bits immediately using sessionStorage or generate new ones
+// Initialize bits using sessionStorage or generate new ones
 function getBits(): string[] {
   if (typeof window === 'undefined') {
-    // Server-side: return empty array, will be populated on client
     return []
   }
   
@@ -40,12 +39,16 @@ function getBits(): string[] {
 }
 
 export default function BinaryHeader() {
-  // Initialize bits immediately on first render - no useEffect delay
-  // This ensures the animation starts immediately
-  const bits = typeof window !== 'undefined' ? getBits() : []
+  const [bits, setBits] = useState<string[]>([])
+  const [mounted, setMounted] = useState(false)
 
-  if (bits.length === 0) {
-    // Return empty div to prevent layout shift, animation will start when bits are ready
+  // Only run on client to avoid hydration issues
+  useEffect(() => {
+    setMounted(true)
+    setBits(getBits())
+  }, [])
+
+  if (!mounted || bits.length === 0) {
     return null
   }
 
