@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useEffect, useRef, useCallback } from 'react'
 
 // Use a seeded random function to generate consistent bits
 function seededRandom(seed: number) {
@@ -21,8 +21,6 @@ function getBits(): string[] {
     return JSON.parse(storedBits)
   }
   
-  // Generate random mix of 1s and 0s with a seed based on session start
-  // Use a session start time stored in sessionStorage to ensure consistency
   let sessionStart = sessionStorage.getItem('vulnhub-session-start')
   if (!sessionStart) {
     sessionStart = Date.now().toString()
@@ -30,7 +28,6 @@ function getBits(): string[] {
   }
   
   const seed = parseInt(sessionStart, 10)
-  // Increased from 14 to 30 bits
   const newBits = Array.from({ length: 30 }, (_, i) => 
     seededRandom(seed + i) > 0.5 ? '1' : '0'
   )
@@ -39,93 +36,89 @@ function getBits(): string[] {
   return newBits
 }
 
-interface BitPosition {
+interface Bit {
+  value: string
   x: number
   y: number
-  targetX: number
-  targetY: number
+  baseX: number
+  baseY: number
   vx: number
   vy: number
   isInteractive: boolean
-  peckPhase: number // 0 = approaching, 1 = pecking, 2 = retreating
+  angle: number
+  rotationSpeed: number
+  animationOffset: number
+  animationSpeed: number
+  peckPhase: number
   peckTimer: number
 }
 
 export default function BinaryHeader() {
-  const [bits, setBits] = useState<string[]>([])
-  const [mounted, setMounted] = useState(false)
-  const [mousePos, setMousePos] = useState<{ x: number; y: number } | null>(null)
-  const [animationTick, setAnimationTick] = useState(0) // Force re-render for position updates
-  const headerRef = useRef<HTMLDivElement>(null)
-  const bitPositionsRef = useRef<Map<number, BitPosition>>(new Map())
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const bitsRef = useRef<Bit[]>([])
+  const mousePosRef = useRef<{ x: number; y: number } | null>(null)
   const animationFrameRef = useRef<number>()
+  const lastTimeRef = useRef<number>(0)
 
-  // Only run on client to avoid hydration issues
+  // Initialize bits
   useEffect(() => {
-    setMounted(true)
-    const newBits = getBits()
-    setBits(newBits)
-    
-    // Initialize positions for all bits with stable seeded values
-    const positions = new Map<number, BitPosition>()
+    const bits: Bit[] = []
     const sessionStart = sessionStorage.getItem('vulnhub-session-start')
     const seed = sessionStart ? parseInt(sessionStart, 10) : Date.now()
-    
-    newBits.forEach((_, index) => {
-      // Use seeded random for consistent initial positions
+    const bitValues = getBits()
+
+    bitValues.forEach((value, index) => {
       const getSeededValue = (idx: number, min: number, max: number) => {
-        const value = seededRandom(seed + idx * 137)
-        return min + value * (max - min)
+        const val = seededRandom(seed + idx * 137)
+        return min + val * (max - min)
       }
-      
-      const initialX = getSeededValue(index, 5, 95)
-      const initialY = getSeededValue(index, 5, 95)
-      
-      // 40% of bits are interactive (fish-like)
+
+      const baseX = getSeededValue(index, 0.05, 0.95)
+      const baseY = getSeededValue(index, 0.05, 0.95)
       const isInteractive = seededRandom(seed + index * 7) < 0.4
-      
-      positions.set(index, {
-        x: initialX,
-        y: initialY,
-        targetX: initialX,
-        targetY: initialY,
+
+      bits.push({
+        value,
+        x: baseX,
+        y: baseY,
+        baseX,
+        baseY,
         vx: 0,
         vy: 0,
         isInteractive,
+        angle: seededRandom(seed + index * 13) * Math.PI * 2,
+        rotationSpeed: (seededRandom(seed + index * 17) - 0.5) * 0.02,
+        animationOffset: seededRandom(seed + index * 19) * Math.PI * 2,
+        animationSpeed: 0.5 + seededRandom(seed + index * 23) * 0.5,
         peckPhase: 0,
         peckTimer: 0,
       })
     })
-    bitPositionsRef.current = positions
+
+    bitsRef.current = bits
   }, [])
 
   // Mouse tracking
   const handleMouseMove = useCallback((e: MouseEvent) => {
-    if (!headerRef.current) return
-    
-    const header = headerRef.current.closest('header')
-    if (!header) return
-    
-    const rect = header.getBoundingClientRect()
-    const x = ((e.clientX - rect.left) / rect.width) * 100
-    const y = ((e.clientY - rect.top) / rect.height) * 100
-    setMousePos({ x, y })
+    const canvas = canvasRef.current
+    if (!canvas) return
+
+    const rect = canvas.getBoundingClientRect()
+    mousePosRef.current = {
+      x: (e.clientX - rect.left) / rect.width,
+      y: (e.clientY - rect.top) / rect.height,
+    }
   }, [])
 
   const handleMouseLeave = useCallback(() => {
-    // Mark that bits need to return when mouse leaves
-    const positions = bitPositionsRef.current
-    const hasInteractive = Array.from(positions.values()).some(pos => pos.isInteractive)
-    if (hasInteractive) {
-      hasReturningBitsRef.current = true
-    }
-    setMousePos(null)
+    mousePosRef.current = null
   }, [])
 
   useEffect(() => {
-    if (!mounted) return
+    const canvas = canvasRef.current
+    if (!canvas) return
 
-    const header = headerRef.current?.closest('header')
+    const header = canvas.closest('header')
     if (!header) return
 
     header.addEventListener('mousemove', handleMouseMove)
@@ -135,252 +128,174 @@ export default function BinaryHeader() {
       header.removeEventListener('mousemove', handleMouseMove)
       header.removeEventListener('mouseleave', handleMouseLeave)
     }
-  }, [mounted, handleMouseMove, handleMouseLeave])
+  }, [handleMouseMove, handleMouseLeave])
 
-  // Track if any interactive bits need to return to base
-  const hasReturningBitsRef = useRef(false)
-
-  // Animation loop for fish-like behavior
+  // Animation loop
   useEffect(() => {
-    if (!mounted || bits.length === 0) return
+    const canvas = canvasRef.current
+    if (!canvas) return
 
-    // Small delay to ensure positions are initialized
-    const initTimeout = setTimeout(() => {
-      // Check if we need to run the animation loop at all
-      const positions = bitPositionsRef.current
-      if (positions.size === 0) return
-      
-      const hasInteractiveBits = Array.from(positions.values()).some(pos => pos.isInteractive)
-      
-      if (!hasInteractiveBits) {
-        return // No interactive bits, no need for physics
-      }
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
 
-      const needsReturn = hasReturningBitsRef.current
-      
-      // Only run if mouse is present or bits need to return
-      if (!mousePos && !needsReturn) {
-        return
-      }
+    // Set canvas size
+    const resizeCanvas = () => {
+      const rect = canvas.getBoundingClientRect()
+      canvas.width = rect.width
+      canvas.height = rect.height
+    }
 
-      let lastTime = performance.now()
-      const FPS = 60
-      const frameInterval = 1000 / FPS
+    resizeCanvas()
+    window.addEventListener('resize', resizeCanvas)
 
-      const animate = (currentTime: number) => {
-      const deltaTime = currentTime - lastTime
-      
-      // Throttle to ~60fps
-      if (deltaTime < frameInterval) {
-        animationFrameRef.current = requestAnimationFrame(animate)
-        return
-      }
-      
-      lastTime = currentTime - (deltaTime % frameInterval)
+    const ATTRACTION_DISTANCE = 0.15
+    const PECK_DISTANCE = 0.05
+    const ATTRACTION_STRENGTH = 0.0008
+    const RETREAT_STRENGTH = 0.0012
+    const FRICTION = 0.92
+    const MAX_SPEED = 0.003
+    const RETURN_STRENGTH = 0.0005
+    const FLOAT_AMPLITUDE = 0.02
 
-      const currentPositions = bitPositionsRef.current
-      const ATTRACTION_DISTANCE = 15 // Distance at which bits start being attracted
-      const PECK_DISTANCE = 5 // Distance for pecking behavior
-      const ATTRACTION_STRENGTH = 0.15 // How strong the attraction is
-      const RETREAT_STRENGTH = 0.25 // How fast they retreat after pecking
-      const FRICTION = 0.92 // Friction to slow down movement
-      const MAX_SPEED = 2 // Maximum speed
-      const RETURN_STRENGTH = 0.1 // How fast they return to base position
-      const deltaSeconds = deltaTime / 1000 // Normalize to seconds
+    const animate = (currentTime: number) => {
+      if (!ctx) return
 
-      let needsUpdate = false
-      let stillReturning = false
+      const deltaTime = currentTime - lastTimeRef.current
+      lastTimeRef.current = currentTime
+      const deltaSeconds = Math.min(deltaTime / 1000, 0.1) // Cap at 100ms
 
-      currentPositions.forEach((pos, index) => {
-        if (!pos.isInteractive) return
+      // Clear canvas
+      ctx.clearRect(0, 0, canvas.width, canvas.height)
 
-        if (!mousePos) {
-          // Return to base position when mouse leaves
-          const dx = pos.targetX - pos.x
-          const dy = pos.targetY - pos.y
+      // Set font and style
+      ctx.font = '24px monospace'
+      ctx.textAlign = 'center'
+      ctx.textBaseline = 'middle'
+
+      const mousePos = mousePosRef.current
+      const bits = bitsRef.current
+
+      bits.forEach((bit) => {
+        // Update rotation for floating effect
+        bit.angle += bit.rotationSpeed * deltaSeconds * 60
+
+        if (bit.isInteractive && mousePos) {
+          // Interactive behavior - fish-like attraction
+          const dx = mousePos.x - bit.x
+          const dy = mousePos.y - bit.y
           const distance = Math.sqrt(dx * dx + dy * dy)
-          
-          if (distance > 0.5) {
-            stillReturning = true
+
+          bit.peckTimer += deltaSeconds
+
+          if (distance < ATTRACTION_DISTANCE && distance > PECK_DISTANCE) {
+            // Approaching
+            bit.peckPhase = 0
+            bit.peckTimer = 0
             const angle = Math.atan2(dy, dx)
-            pos.vx += Math.cos(angle) * RETURN_STRENGTH * deltaSeconds * 60
-            pos.vy += Math.sin(angle) * RETURN_STRENGTH * deltaSeconds * 60
-            needsUpdate = true
-          } else {
-            // Close enough, snap to target and stop
-            if (Math.abs(pos.x - pos.targetX) > 0.1 || Math.abs(pos.y - pos.targetY) > 0.1) {
-              pos.x = pos.targetX
-              pos.y = pos.targetY
-              pos.vx = 0
-              pos.vy = 0
-              needsUpdate = true
+            const force = ATTRACTION_STRENGTH * (1 - distance / ATTRACTION_DISTANCE)
+            bit.vx += Math.cos(angle) * force * deltaSeconds * 60
+            bit.vy += Math.sin(angle) * force * deltaSeconds * 60
+          } else if (distance <= PECK_DISTANCE) {
+            // Pecking
+            if (bit.peckPhase === 0 || bit.peckTimer < 0.3) {
+              bit.peckPhase = 1
+              const angle = Math.atan2(dy, dx)
+              bit.vx += Math.cos(angle) * 0.0015 * deltaSeconds * 60
+              bit.vy += Math.sin(angle) * 0.0015 * deltaSeconds * 60
+            } else {
+              // Retreat
+              bit.peckPhase = 2
+              const angle = Math.atan2(dy, dx)
+              bit.vx -= Math.cos(angle) * RETREAT_STRENGTH * deltaSeconds * 60
+              bit.vy -= Math.sin(angle) * RETREAT_STRENGTH * deltaSeconds * 60
+              if (bit.peckTimer > 0.8) {
+                bit.peckPhase = 0
+                bit.peckTimer = 0
+              }
             }
-          }
-          
-          if (needsUpdate) {
-            // Apply friction
-            pos.vx *= Math.pow(FRICTION, deltaSeconds * 60)
-            pos.vy *= Math.pow(FRICTION, deltaSeconds * 60)
-            
-            // Update position
-            pos.x += pos.vx * deltaSeconds * 60
-            pos.y += pos.vy * deltaSeconds * 60
-            
-            // Keep within bounds
-            pos.x = Math.max(2, Math.min(98, pos.x))
-            pos.y = Math.max(2, Math.min(98, pos.y))
-          }
-          return
-        }
-
-        needsUpdate = true
-        const dx = mousePos.x - pos.x
-        const dy = mousePos.y - pos.y
-        const distance = Math.sqrt(dx * dx + dy * dy)
-
-        // Update peck timer
-        pos.peckTimer += deltaSeconds
-
-        if (distance < ATTRACTION_DISTANCE && distance > PECK_DISTANCE) {
-          // Approaching phase - swim toward mouse
-          pos.peckPhase = 0
-          pos.peckTimer = 0
-          
-          const angle = Math.atan2(dy, dx)
-          const force = ATTRACTION_STRENGTH * (1 - distance / ATTRACTION_DISTANCE)
-          
-          pos.vx += Math.cos(angle) * force * deltaSeconds * 60
-          pos.vy += Math.sin(angle) * force * deltaSeconds * 60
-        } else if (distance <= PECK_DISTANCE) {
-          // Pecking phase - get close then retreat
-          if (pos.peckPhase === 0 || pos.peckTimer < 0.3) {
-            pos.peckPhase = 1
-            // Small forward movement (pecking)
-            const angle = Math.atan2(dy, dx)
-            pos.vx += Math.cos(angle) * 0.3 * deltaSeconds * 60
-            pos.vy += Math.sin(angle) * 0.3 * deltaSeconds * 60
           } else {
-            // Retreat phase - back away
-            pos.peckPhase = 2
+            bit.peckPhase = 0
+            bit.peckTimer = 0
+          }
+
+          // Apply friction
+          bit.vx *= Math.pow(FRICTION, deltaSeconds * 60)
+          bit.vy *= Math.pow(FRICTION, deltaSeconds * 60)
+
+          // Limit speed
+          const speed = Math.sqrt(bit.vx * bit.vx + bit.vy * bit.vy)
+          if (speed > MAX_SPEED) {
+            bit.vx = (bit.vx / speed) * MAX_SPEED
+            bit.vy = (bit.vy / speed) * MAX_SPEED
+          }
+
+          // Update position
+          bit.x += bit.vx * deltaSeconds * 60
+          bit.y += bit.vy * deltaSeconds * 60
+
+          // Keep within bounds
+          bit.x = Math.max(0.02, Math.min(0.98, bit.x))
+          bit.y = Math.max(0.02, Math.min(0.98, bit.y))
+        } else if (bit.isInteractive && !mousePos) {
+          // Return to base position
+          const dx = bit.baseX - bit.x
+          const dy = bit.baseY - bit.y
+          const distance = Math.sqrt(dx * dx + dy * dy)
+
+          if (distance > 0.005) {
             const angle = Math.atan2(dy, dx)
-            pos.vx -= Math.cos(angle) * RETREAT_STRENGTH * deltaSeconds * 60
-            pos.vy -= Math.sin(angle) * RETREAT_STRENGTH * deltaSeconds * 60
-            
-            // After retreating, reset phase
-            if (pos.peckTimer > 0.8) {
-              pos.peckPhase = 0
-              pos.peckTimer = 0
-            }
+            bit.vx += Math.cos(angle) * RETURN_STRENGTH * deltaSeconds * 60
+            bit.vy += Math.sin(angle) * RETURN_STRENGTH * deltaSeconds * 60
+            bit.vx *= Math.pow(FRICTION, deltaSeconds * 60)
+            bit.vy *= Math.pow(FRICTION, deltaSeconds * 60)
+            bit.x += bit.vx * deltaSeconds * 60
+            bit.y += bit.vy * deltaSeconds * 60
+          } else {
+            bit.x = bit.baseX
+            bit.y = bit.baseY
+            bit.vx = 0
+            bit.vy = 0
           }
         } else {
-          // Too far away - return to normal behavior
-          pos.peckPhase = 0
-          pos.peckTimer = 0
+          // Non-interactive: floating animation
+          const time = currentTime / 1000
+          bit.x = bit.baseX + Math.sin(time * bit.animationSpeed + bit.animationOffset) * FLOAT_AMPLITUDE
+          bit.y = bit.baseY + Math.cos(time * bit.animationSpeed * 0.7 + bit.animationOffset) * FLOAT_AMPLITUDE
         }
 
-        // Apply friction and limit speed
-        pos.vx *= Math.pow(FRICTION, deltaSeconds * 60)
-        pos.vy *= Math.pow(FRICTION, deltaSeconds * 60)
-        
-        const speed = Math.sqrt(pos.vx * pos.vx + pos.vy * pos.vy)
-        if (speed > MAX_SPEED) {
-          pos.vx = (pos.vx / speed) * MAX_SPEED
-          pos.vy = (pos.vy / speed) * MAX_SPEED
-        }
+        // Draw bit
+        const pixelX = bit.x * canvas.width
+        const pixelY = bit.y * canvas.height
+        const opacity = bit.isInteractive && mousePos ? 0.6 : 0.4
 
-        // Update position
-        pos.x += pos.vx * deltaSeconds * 60
-        pos.y += pos.vy * deltaSeconds * 60
-
-        // Keep within bounds
-        pos.x = Math.max(2, Math.min(98, pos.x))
-        pos.y = Math.max(2, Math.min(98, pos.y))
+        ctx.save()
+        ctx.translate(pixelX, pixelY)
+        ctx.rotate(bit.angle)
+        ctx.globalAlpha = opacity
+        ctx.fillStyle = 'rgba(249, 115, 22, 0.25)'
+        ctx.fillText(bit.value, 0, 0)
+        ctx.restore()
       })
 
-      // Update returning state
-      hasReturningBitsRef.current = stillReturning
+      animationFrameRef.current = requestAnimationFrame(animate)
+    }
 
-      // Only trigger re-render if positions actually changed
-      if (needsUpdate) {
-        setAnimationTick(t => t + 1)
-      }
-
-      // Continue animation if mouse is present or bits are still returning
-      if (mousePos || stillReturning) {
-        animationFrameRef.current = requestAnimationFrame(animate)
-      }
-      }
-
-      // Only start animation if needed
-      if (mousePos || needsReturn) {
-        animationFrameRef.current = requestAnimationFrame(animate)
-      }
-    }, 100) // 100ms delay to ensure initialization
+    lastTimeRef.current = performance.now()
+    animationFrameRef.current = requestAnimationFrame(animate)
 
     return () => {
-      clearTimeout(initTimeout)
+      window.removeEventListener('resize', resizeCanvas)
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current)
       }
     }
-  }, [mounted, bits.length, mousePos])
-
-  if (!mounted || bits.length === 0) {
-    return null
-  }
-
-  // Generate random positions and animation variations for each bit
-  const getRandomValue = (index: number, min: number, max: number) => {
-    const seed = Date.now() % 10000 + index * 137
-    return min + (Math.sin(seed) * 10000 % 1) * (max - min)
-  }
+  }, [])
 
   return (
-    <div ref={headerRef} className="absolute inset-0 pointer-events-auto">
-      {bits.map((bit, index) => {
-        const pos = bitPositionsRef.current.get(index)
-        const isInteractive = pos?.isInteractive ?? false
-        
-        // Random starting position within header (for non-interactive or initial state)
-        const top = pos ? `${pos.y}%` : `${getRandomValue(index, 5, 95)}%`
-        const left = pos ? `${pos.x}%` : `${getRandomValue(index, 5, 95)}%`
-        
-        // Very small random delay (0-0.3s) just to offset them slightly
-        const delay = `${getRandomValue(index, 0, 0.3)}s`
-        
-        // Random animation duration for more variation (5-10 seconds)
-        const duration = `${getRandomValue(index, 5, 10)}s`
-        
-        // Random animation name (will use different paths)
-        const animationName = `float-${(index % 4) + 1}`
-        
-        // Interactive bits have reduced opacity and no animation when mouse is near
-        const shouldAnimate = !isInteractive || !mousePos
-        const isInteracting = isInteractive && mousePos
-        
-        return (
-          <div 
-            key={`bit-${index}`} 
-            className="binary-bit pointer-events-none"
-            style={{
-              top,
-              left,
-              animation: shouldAnimate ? `${animationName} ${duration} ease-in-out infinite` : 'none',
-              animationDelay: shouldAnimate ? delay : '0s',
-              opacity: isInteracting ? 0.6 : 0.4,
-              transition: isInteracting 
-                ? 'top 0.05s linear, left 0.05s linear, opacity 0.2s ease' 
-                : 'opacity 0.2s ease',
-              // Disable CSS transform when using manual positioning
-              transform: isInteracting ? 'none' : undefined,
-              willChange: isInteracting ? 'top, left' : 'transform',
-            }}
-          >
-            {bit}
-          </div>
-        )
-      })}
-    </div>
+    <canvas
+      ref={canvasRef}
+      className="absolute inset-0 w-full h-full pointer-events-none"
+      style={{ zIndex: 0 }}
+    />
   )
 }
-
