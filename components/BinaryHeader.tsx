@@ -58,8 +58,12 @@ interface Bit {
   peckPhase: number
   peckTimer: number
   circleAngle: number // Angle for circling around mouse
-  circleRadius: number // Distance to maintain while circling
+  circleRadius: number // Base distance to maintain while circling
+  circleRadiusX: number // X radius (for oval variation)
+  circleRadiusY: number // Y radius (for oval variation)
   circleSpeed: number // Speed of circling
+  circleOffsetX: number // Horizontal offset from mouse
+  circleOffsetY: number // Vertical offset from mouse
   nextPeckDelay: number // Random delay before next peck
   circling: boolean // Whether currently circling
 }
@@ -124,8 +128,14 @@ export default function BinaryHeader() {
         peckTimer: 0,
         circleAngle: seededRandom(seed + index * 29) * Math.PI * 2,
         circleRadius: 0.06 + seededRandom(seed + index * 31) * 0.04, // 0.06 to 0.10
-        circleSpeed: 0.5 + seededRandom(seed + index * 37) * 1.5, // 0.5 to 2.0
-        nextPeckDelay: 0.5 + seededRandom(seed + index * 41) * 2.0, // 0.5 to 2.5 seconds
+        // Random circle shape - more circular (less oval)
+        circleRadiusX: 0.06 + seededRandom(seed + index * 43) * 0.03, // 0.06 to 0.09
+        circleRadiusY: 0.06 + seededRandom(seed + index * 47) * 0.03, // 0.06 to 0.09
+        circleSpeed: 0.8 + seededRandom(seed + index * 37) * 1.2, // 0.8 to 2.0 (faster)
+        // Small random offsets for more varied patterns
+        circleOffsetX: (seededRandom(seed + index * 53) - 0.5) * 0.01, // -0.005 to 0.005
+        circleOffsetY: (seededRandom(seed + index * 59) - 0.5) * 0.01, // -0.005 to 0.005
+        nextPeckDelay: 0.2 + seededRandom(seed + index * 41) * 1.3, // 0.2 to 1.5 seconds (shorter)
         circling: false,
       })
     })
@@ -262,9 +272,10 @@ export default function BinaryHeader() {
             // Update circle angle
             bit.circleAngle += bit.circleSpeed * deltaSeconds
             
-            // Calculate desired position on circle
-            const targetX = mousePos.x + Math.cos(bit.circleAngle) * bit.circleRadius
-            const targetY = mousePos.y + Math.sin(bit.circleAngle) * bit.circleRadius
+            // Calculate desired position on circle with random shape and offset
+            // Use different X and Y radii for slight variation, but keep it mostly circular
+            const targetX = mousePos.x + bit.circleOffsetX + Math.cos(bit.circleAngle) * bit.circleRadiusX
+            const targetY = mousePos.y + bit.circleOffsetY + Math.sin(bit.circleAngle) * bit.circleRadiusY
             
             // Move toward circle position (only if not pecking)
             if (bit.peckPhase === 0) {
@@ -274,7 +285,8 @@ export default function BinaryHeader() {
               
               if (circleDist > 0.01) {
                 const circleAngle = Math.atan2(circleDy, circleDx)
-                const circleForce = CIRCLE_STRENGTH * Math.min(circleDist / bit.circleRadius, 1)
+                const avgRadius = (bit.circleRadiusX + bit.circleRadiusY) / 2
+                const circleForce = CIRCLE_STRENGTH * Math.min(circleDist / avgRadius, 1)
                 bit.vx += Math.cos(circleAngle) * circleForce * deltaSeconds * 60
                 bit.vy += Math.sin(circleAngle) * circleForce * deltaSeconds * 60
               }
@@ -286,23 +298,21 @@ export default function BinaryHeader() {
               
               // Check if it's time to consider pecking
               if (bit.peckTimer >= bit.nextPeckDelay) {
-                // Use truly random chance (not seeded) for more randomness
-                // Combine multiple sources for better randomness
+                // Use truly random chance - increased probability
                 const random1 = Math.random()
                 const random2 = Math.random()
-                const random3 = Math.random()
-                const combinedRandom = (random1 + random2 + random3) / 3
+                const combinedRandom = (random1 + random2) / 2
                 
-                // 25% chance to peck when timer expires (truly random)
-                if (combinedRandom < 0.25) {
+                // 40% chance to peck when timer expires (increased from 25%)
+                if (combinedRandom < 0.4) {
                   bit.peckPhase = 1
                   bit.peckTimer = 0
-                  // Set next random delay (0.3 to 2.5 seconds)
-                  bit.nextPeckDelay = 0.3 + Math.random() * 2.2
+                  // Set next random delay (0.2 to 1.5 seconds - shorter)
+                  bit.nextPeckDelay = 0.2 + Math.random() * 1.3
                 } else {
-                  // Didn't peck, reset timer with new random delay
+                  // Didn't peck, reset timer with new random delay (shorter)
                   bit.peckTimer = 0
-                  bit.nextPeckDelay = 0.3 + Math.random() * 2.2
+                  bit.nextPeckDelay = 0.2 + Math.random() * 1.3
                 }
               }
             } else if (bit.peckPhase === 1) {
@@ -336,8 +346,8 @@ export default function BinaryHeader() {
                 // Reset to circling - can peck again randomly
                 bit.peckPhase = 0
                 bit.peckTimer = 0
-                // New random delay before next peck consideration
-                bit.nextPeckDelay = 0.3 + Math.random() * 2.2
+                // New random delay before next peck consideration (shorter)
+                bit.nextPeckDelay = 0.2 + Math.random() * 1.3
               }
             }
           } else if (distance <= PECK_DISTANCE) {
@@ -376,7 +386,7 @@ export default function BinaryHeader() {
                 // Reset
                 bit.peckPhase = 0
                 bit.peckTimer = 0
-                bit.nextPeckDelay = 0.3 + Math.random() * 2.2
+                bit.nextPeckDelay = 0.2 + Math.random() * 1.3
               }
             }
           } else {
