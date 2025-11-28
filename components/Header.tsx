@@ -7,7 +7,7 @@ export default function Header() {
   return (
     <header className="relative bg-gradient-cyber border-b border-dark-700 py-12 mb-8 overflow-hidden">
       {/* Binary bits contained within header */}
-      <div className="absolute inset-0 pointer-events-none z-0">
+      <div className="absolute inset-0 z-0">
         <BinaryHeader />
       </div>
       
