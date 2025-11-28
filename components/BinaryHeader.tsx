@@ -276,21 +276,21 @@ export default function BinaryHeader() {
             // Swimming phase - truly random swim pattern around mouse, can peck at any time
             bit.circling = true
             
-            // Update wander angle more frequently for more random movement
+            // Update wander angle smoothly for natural swimming
             bit.wanderChangeTimer += deltaSeconds
             if (bit.wanderChangeTimer >= bit.wanderChangeInterval) {
-              // Change wander direction more randomly (up to 180 degrees)
-              bit.wanderAngle += (Math.random() - 0.5) * Math.PI // Random change up to 180 degrees
-              // Add some randomness to the angle itself
-              bit.wanderAngle += (Math.random() - 0.5) * 0.3 // Small continuous random drift
+              // Gradual direction change (smaller, smoother changes)
+              const angleChange = (Math.random() - 0.5) * Math.PI * 0.3 // Max 54 degrees change
+              bit.wanderAngle += angleChange
               bit.wanderChangeTimer = 0
-              bit.wanderChangeInterval = 0.3 + Math.random() * 0.7 // Faster changes (0.3-1.0s)
+              bit.wanderChangeInterval = 0.8 + Math.random() * 1.2 // Slower changes (0.8-2.0s)
             } else {
-              // Continuous small random drift even between changes
-              bit.wanderAngle += (Math.random() - 0.5) * 0.1 * deltaSeconds * 60
+              // Very gentle, smooth drift between changes
+              const driftAmount = (Math.random() - 0.5) * 0.02 * deltaSeconds * 60
+              bit.wanderAngle += driftAmount
             }
             
-            // Truly random swim pattern - no structured circular motion
+            // Smooth random swim pattern - no spazzing
             if (bit.peckPhase === 0) {
               // Calculate angle to mouse
               const toMouseAngle = Math.atan2(dy, dx)
@@ -298,23 +298,17 @@ export default function BinaryHeader() {
               // Maintain distance from mouse (gentle pull away if too close, pull in if too far)
               const desiredDistance = bit.circleRadius
               const distanceError = distance - desiredDistance
-              const maintainForce = distanceError * 0.0008 // Slightly stronger to maintain distance
+              const maintainForce = distanceError * 0.0006 // Reduced for smoother movement
               
               // Apply maintain distance force
               bit.vx += Math.cos(toMouseAngle) * maintainForce * deltaSeconds * 60
               bit.vy += Math.sin(toMouseAngle) * maintainForce * deltaSeconds * 60
               
-              // Random swimming in completely random direction (not just perpendicular)
-              const wanderForce = 0.0006 + Math.random() * 0.0004 // Variable force (0.0006-0.001)
-              // Use wander angle directly, not relative to mouse - truly random direction
+              // Smooth random swimming - consistent force, not variable
+              const wanderForce = 0.0005 // Fixed force for smoother movement
+              // Use wander angle for smooth swimming direction
               bit.vx += Math.cos(bit.wanderAngle) * wanderForce * deltaSeconds * 60
               bit.vy += Math.sin(bit.wanderAngle) * wanderForce * deltaSeconds * 60
-              
-              // Add additional random forces for more chaotic, natural swimming
-              const randomForce1 = (Math.random() - 0.5) * 0.0003
-              const randomAngle1 = Math.random() * Math.PI * 2
-              bit.vx += Math.cos(randomAngle1) * randomForce1 * deltaSeconds * 60
-              bit.vy += Math.sin(randomAngle1) * randomForce1 * deltaSeconds * 60
             }
             
             // Random peck timing - truly random while circling
@@ -456,8 +450,13 @@ export default function BinaryHeader() {
             }
           }
 
-          // Apply friction (stronger during retreat to reduce bouncing)
-          const currentFriction = bit.peckPhase === 2 ? FRICTION * 0.98 : FRICTION
+          // Apply friction (stronger during retreat and swimming to reduce spazzing)
+          let currentFriction = FRICTION
+          if (bit.peckPhase === 2) {
+            currentFriction = FRICTION * 0.98 // Stronger during retreat
+          } else if (bit.circling && bit.peckPhase === 0) {
+            currentFriction = 0.96 // Higher friction during swimming for smoother movement
+          }
           bit.vx *= Math.pow(currentFriction, deltaSeconds * 60)
           bit.vy *= Math.pow(currentFriction, deltaSeconds * 60)
 
@@ -542,8 +541,8 @@ export default function BinaryHeader() {
       }
     }
   }, [])
-
-  return (
+        
+        return (
     <canvas
       ref={canvasRef}
       className="absolute inset-0 w-full h-full pointer-events-none"
