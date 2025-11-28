@@ -257,8 +257,6 @@ export default function BinaryHeader() {
           const dy = mousePos.y - bit.y
           const distance = Math.sqrt(dx * dx + dy * dy)
 
-          bit.peckTimer += deltaSeconds
-
           if (distance < ATTRACTION_DISTANCE && distance > CIRCLE_DISTANCE) {
             // Approaching phase - smooth swim toward mouse
             bit.circling = false
@@ -268,10 +266,30 @@ export default function BinaryHeader() {
               bit.peckTimer = 0
             }
             const angle = Math.atan2(dy, dx)
-            // Smooth attraction that gets stronger as it gets closer
-            const force = ATTRACTION_STRENGTH * (1 - distance / ATTRACTION_DISTANCE)
+            // Stronger attraction - minimum 50% force even when far, up to 100% when close
+            // This ensures bits on outskirts are pulled in more strongly
+            const normalizedDistance = distance / ATTRACTION_DISTANCE
+            const force = ATTRACTION_STRENGTH * (0.5 + 0.5 * (1 - normalizedDistance))
             bit.vx += Math.cos(angle) * force * deltaSeconds * 60
             bit.vy += Math.sin(angle) * force * deltaSeconds * 60
+            
+            // Allow pecking even when approaching (not just when circling)
+            bit.peckTimer += deltaSeconds
+            if (bit.peckTimer >= bit.nextPeckDelay) {
+              const random1 = Math.random()
+              const random2 = Math.random()
+              const combinedRandom = (random1 + random2) / 2
+              
+              // 30% chance to peck while approaching (lower than when circling)
+              if (combinedRandom < 0.3) {
+                bit.peckPhase = 1
+                bit.peckTimer = 0
+                bit.nextPeckDelay = 0.2 + Math.random() * 1.3
+              } else {
+                bit.peckTimer = 0
+                bit.nextPeckDelay = 0.2 + Math.random() * 1.3
+              }
+            }
           } else if (distance <= CIRCLE_DISTANCE) {
             // Swimming phase - truly random swim pattern around mouse, can peck at any time
             bit.circling = true
@@ -304,8 +322,10 @@ export default function BinaryHeader() {
               bit.vx += Math.cos(toMouseAngle) * maintainForce * deltaSeconds * 60
               bit.vy += Math.sin(toMouseAngle) * maintainForce * deltaSeconds * 60
               
-              // Smooth random swimming - consistent force, not variable
-              const wanderForce = 0.0005 // Fixed force for smoother movement
+              // Smooth random swimming - but reduce force if too far from desired distance
+              // This prevents bits from swimming away when they should be coming closer
+              const distanceFactor = Math.min(1, Math.abs(distanceError) / 0.05) // Reduce if far from target
+              const wanderForce = 0.0005 * (1 - distanceFactor * 0.5) // Less wandering when far from target
               // Use wander angle for smooth swimming direction
               bit.vx += Math.cos(bit.wanderAngle) * wanderForce * deltaSeconds * 60
               bit.vy += Math.sin(bit.wanderAngle) * wanderForce * deltaSeconds * 60
@@ -313,6 +333,7 @@ export default function BinaryHeader() {
             
             // Random peck timing - truly random while circling
             if (bit.peckPhase === 0) {
+              // Only increment timer if not already handled in approaching phase
               bit.peckTimer += deltaSeconds
               
               // Check if it's time to consider pecking
