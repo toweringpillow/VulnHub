@@ -273,42 +273,48 @@ export default function BinaryHeader() {
             bit.vx += Math.cos(angle) * force * deltaSeconds * 60
             bit.vy += Math.sin(angle) * force * deltaSeconds * 60
           } else if (distance <= CIRCLE_DISTANCE) {
-            // Swimming phase - random swim pattern around mouse, can peck at any time
+            // Swimming phase - truly random swim pattern around mouse, can peck at any time
             bit.circling = true
             
-            // Update wander angle randomly for swim pattern
+            // Update wander angle more frequently for more random movement
             bit.wanderChangeTimer += deltaSeconds
             if (bit.wanderChangeTimer >= bit.wanderChangeInterval) {
-              // Change wander direction randomly
-              bit.wanderAngle += (Math.random() - 0.5) * Math.PI * 0.5 // Random change up to 90 degrees
+              // Change wander direction more randomly (up to 180 degrees)
+              bit.wanderAngle += (Math.random() - 0.5) * Math.PI // Random change up to 180 degrees
+              // Add some randomness to the angle itself
+              bit.wanderAngle += (Math.random() - 0.5) * 0.3 // Small continuous random drift
               bit.wanderChangeTimer = 0
-              bit.wanderChangeInterval = 0.5 + Math.random() * 1.5 // New random interval
+              bit.wanderChangeInterval = 0.3 + Math.random() * 0.7 // Faster changes (0.3-1.0s)
+            } else {
+              // Continuous small random drift even between changes
+              bit.wanderAngle += (Math.random() - 0.5) * 0.1 * deltaSeconds * 60
             }
             
-            // Random swim pattern - combination of maintaining distance and wandering
+            // Truly random swim pattern - no structured circular motion
             if (bit.peckPhase === 0) {
               // Calculate angle to mouse
               const toMouseAngle = Math.atan2(dy, dx)
               
-              // Maintain distance from mouse (slight pull away if too close, pull in if too far)
+              // Maintain distance from mouse (gentle pull away if too close, pull in if too far)
               const desiredDistance = bit.circleRadius
               const distanceError = distance - desiredDistance
-              const maintainForce = distanceError * 0.001 // Gentle force to maintain distance
+              const maintainForce = distanceError * 0.0008 // Slightly stronger to maintain distance
               
               // Apply maintain distance force
               bit.vx += Math.cos(toMouseAngle) * maintainForce * deltaSeconds * 60
               bit.vy += Math.sin(toMouseAngle) * maintainForce * deltaSeconds * 60
               
-              // Add random wandering/swimming motion (perpendicular to mouse direction)
-              const wanderForce = 0.0004 // Random swim force
-              const perpendicularAngle = toMouseAngle + Math.PI / 2 // Perpendicular to mouse
-              bit.vx += Math.cos(perpendicularAngle + bit.wanderAngle) * wanderForce * deltaSeconds * 60
-              bit.vy += Math.sin(perpendicularAngle + bit.wanderAngle) * wanderForce * deltaSeconds * 60
+              // Random swimming in completely random direction (not just perpendicular)
+              const wanderForce = 0.0006 + Math.random() * 0.0004 // Variable force (0.0006-0.001)
+              // Use wander angle directly, not relative to mouse - truly random direction
+              bit.vx += Math.cos(bit.wanderAngle) * wanderForce * deltaSeconds * 60
+              bit.vy += Math.sin(bit.wanderAngle) * wanderForce * deltaSeconds * 60
               
-              // Add some tangential motion for more natural swimming
-              const tangentialAngle = toMouseAngle + Math.PI / 2
-              bit.vx += Math.cos(tangentialAngle) * bit.circleSpeed * 0.0003 * deltaSeconds * 60
-              bit.vy += Math.sin(tangentialAngle) * bit.circleSpeed * 0.0003 * deltaSeconds * 60
+              // Add additional random forces for more chaotic, natural swimming
+              const randomForce1 = (Math.random() - 0.5) * 0.0003
+              const randomAngle1 = Math.random() * Math.PI * 2
+              bit.vx += Math.cos(randomAngle1) * randomForce1 * deltaSeconds * 60
+              bit.vy += Math.sin(randomAngle1) * randomForce1 * deltaSeconds * 60
             }
             
             // Random peck timing - truly random while circling
