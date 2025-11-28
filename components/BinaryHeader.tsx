@@ -255,8 +255,8 @@ export default function BinaryHeader() {
             const force = ATTRACTION_STRENGTH * (1 - distance / ATTRACTION_DISTANCE)
             bit.vx += Math.cos(angle) * force * deltaSeconds * 60
             bit.vy += Math.sin(angle) * force * deltaSeconds * 60
-          } else if (distance <= CIRCLE_DISTANCE && distance > PECK_DISTANCE) {
-            // Circling phase - circle around mouse before pecking
+          } else if (distance <= CIRCLE_DISTANCE) {
+            // Circling phase - circle around mouse, can peck at any time
             bit.circling = true
             
             // Update circle angle
@@ -266,60 +266,105 @@ export default function BinaryHeader() {
             const targetX = mousePos.x + Math.cos(bit.circleAngle) * bit.circleRadius
             const targetY = mousePos.y + Math.sin(bit.circleAngle) * bit.circleRadius
             
-            // Move toward circle position
-            const circleDx = targetX - bit.x
-            const circleDy = targetY - bit.y
-            const circleDist = Math.sqrt(circleDx * circleDx + circleDy * circleDy)
-            
-            if (circleDist > 0.01) {
-              const circleAngle = Math.atan2(circleDy, circleDx)
-              const circleForce = CIRCLE_STRENGTH * Math.min(circleDist / bit.circleRadius, 1)
-              bit.vx += Math.cos(circleAngle) * circleForce * deltaSeconds * 60
-              bit.vy += Math.sin(circleAngle) * circleForce * deltaSeconds * 60
-            }
-            
-            // Random peck timing - check if it's time to peck
-            if (bit.peckPhase === 0 && bit.peckTimer >= bit.nextPeckDelay) {
-              // Random chance to peck (30% chance per check)
-              if (seededRandom(Date.now() + bit.x * 1000 + bit.y * 1000) < 0.3) {
-                bit.peckPhase = 1
-                bit.peckTimer = 0
-                // Reset delay for next peck
-                bit.nextPeckDelay = 0.5 + seededRandom(Date.now() + bit.x * 2000) * 2.0
+            // Move toward circle position (only if not pecking)
+            if (bit.peckPhase === 0) {
+              const circleDx = targetX - bit.x
+              const circleDy = targetY - bit.y
+              const circleDist = Math.sqrt(circleDx * circleDx + circleDy * circleDy)
+              
+              if (circleDist > 0.01) {
+                const circleAngle = Math.atan2(circleDy, circleDx)
+                const circleForce = CIRCLE_STRENGTH * Math.min(circleDist / bit.circleRadius, 1)
+                bit.vx += Math.cos(circleAngle) * circleForce * deltaSeconds * 60
+                bit.vy += Math.sin(circleAngle) * circleForce * deltaSeconds * 60
               }
             }
-          } else if (distance <= PECK_DISTANCE) {
-            // Pecking phase - quick approach, brief pause, then retreat
-            bit.circling = false
             
+            // Random peck timing - truly random while circling
             if (bit.peckPhase === 0) {
-              // Start pecking
-              bit.peckPhase = 1
-              bit.peckTimer = 0
+              bit.peckTimer += deltaSeconds
+              
+              // Check if it's time to consider pecking
+              if (bit.peckTimer >= bit.nextPeckDelay) {
+                // Use truly random chance (not seeded) for more randomness
+                // Combine multiple sources for better randomness
+                const random1 = Math.random()
+                const random2 = Math.random()
+                const random3 = Math.random()
+                const combinedRandom = (random1 + random2 + random3) / 3
+                
+                // 25% chance to peck when timer expires (truly random)
+                if (combinedRandom < 0.25) {
+                  bit.peckPhase = 1
+                  bit.peckTimer = 0
+                  // Set next random delay (0.3 to 2.5 seconds)
+                  bit.nextPeckDelay = 0.3 + Math.random() * 2.2
+                } else {
+                  // Didn't peck, reset timer with new random delay
+                  bit.peckTimer = 0
+                  bit.nextPeckDelay = 0.3 + Math.random() * 2.2
+                }
+              }
             } else if (bit.peckPhase === 1) {
-              // Brief peck forward
+              // Brief peck forward toward mouse
               if (bit.peckTimer < PECK_DURATION) {
                 const angle = Math.atan2(dy, dx)
                 // Quick forward movement
-                bit.vx += Math.cos(angle) * 0.0025 * deltaSeconds * 60
-                bit.vy += Math.sin(angle) * 0.0025 * deltaSeconds * 60
+                bit.vx += Math.cos(angle) * 0.003 * deltaSeconds * 60
+                bit.vy += Math.sin(angle) * 0.003 * deltaSeconds * 60
+                bit.peckTimer += deltaSeconds
               } else {
                 // Switch to retreat
                 bit.peckPhase = 2
                 bit.peckTimer = 0
               }
             } else if (bit.peckPhase === 2) {
-              // Retreat phase - back away quickly
+              // Retreat phase - back away quickly, then return to circling
               if (bit.peckTimer < RETREAT_DURATION) {
                 const angle = Math.atan2(dy, dx)
                 // Strong retreat force
                 bit.vx -= Math.cos(angle) * RETREAT_STRENGTH * deltaSeconds * 60
                 bit.vy -= Math.sin(angle) * RETREAT_STRENGTH * deltaSeconds * 60
+                bit.peckTimer += deltaSeconds
               } else {
-                // Reset to circling/approach phase
+                // Reset to circling - can peck again randomly
                 bit.peckPhase = 0
                 bit.peckTimer = 0
-                bit.nextPeckDelay = 0.5 + seededRandom(Date.now() + bit.x * 3000) * 2.0
+                // New random delay before next peck consideration
+                bit.nextPeckDelay = 0.3 + Math.random() * 2.2
+              }
+            }
+          } else if (distance <= PECK_DISTANCE) {
+            // Very close - peck immediately if not already pecking
+            bit.circling = false
+            
+            if (bit.peckPhase === 0) {
+              // Start pecking immediately when very close
+              bit.peckPhase = 1
+              bit.peckTimer = 0
+            } else if (bit.peckPhase === 1) {
+              // Brief peck forward
+              if (bit.peckTimer < PECK_DURATION) {
+                const angle = Math.atan2(dy, dx)
+                bit.vx += Math.cos(angle) * 0.003 * deltaSeconds * 60
+                bit.vy += Math.sin(angle) * 0.003 * deltaSeconds * 60
+                bit.peckTimer += deltaSeconds
+              } else {
+                bit.peckPhase = 2
+                bit.peckTimer = 0
+              }
+            } else if (bit.peckPhase === 2) {
+              // Retreat
+              if (bit.peckTimer < RETREAT_DURATION) {
+                const angle = Math.atan2(dy, dx)
+                bit.vx -= Math.cos(angle) * RETREAT_STRENGTH * deltaSeconds * 60
+                bit.vy -= Math.sin(angle) * RETREAT_STRENGTH * deltaSeconds * 60
+                bit.peckTimer += deltaSeconds
+              } else {
+                // Reset
+                bit.peckPhase = 0
+                bit.peckTimer = 0
+                bit.nextPeckDelay = 0.3 + Math.random() * 2.2
               }
             }
           } else {
