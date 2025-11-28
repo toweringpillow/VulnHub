@@ -3,9 +3,15 @@
 import { useEffect, useRef, useCallback } from 'react'
 
 // Use a seeded random function to generate consistent bits
+// Improved to reduce patterns and correlations
 function seededRandom(seed: number) {
-  const x = Math.sin(seed) * 10000
-  return x - Math.floor(x)
+  // Use multiple operations to break patterns
+  let x = Math.sin(seed) * 10000
+  x = x - Math.floor(x)
+  // Add additional mixing
+  x = Math.sin(x * 1000) * 10000
+  x = x - Math.floor(x)
+  return x
 }
 
 // Initialize bits using sessionStorage or generate new ones
@@ -69,17 +75,36 @@ export default function BinaryHeader() {
   useEffect(() => {
     const bits: Bit[] = []
     const sessionStart = sessionStorage.getItem('vulnhub-session-start')
+    // Add version to force regeneration if algorithm changes
+    const POSITION_VERSION = 'v2'
+    const versionKey = `vulnhub-positions-version`
+    const storedVersion = sessionStorage.getItem(versionKey)
+    
+    // If version changed, clear old positions and regenerate
+    if (storedVersion !== POSITION_VERSION) {
+      sessionStorage.removeItem('vulnhub-binary-bits')
+      sessionStorage.setItem(versionKey, POSITION_VERSION)
+    }
+    
     const seed = sessionStart ? parseInt(sessionStart, 10) : Date.now()
     const bitValues = getBits()
 
     bitValues.forEach((value, index) => {
-      const getSeededValue = (idx: number, min: number, max: number) => {
-        const val = seededRandom(seed + idx * 137)
+      // Use different large prime numbers for X and Y to avoid correlation
+      const getSeededValueX = (idx: number, min: number, max: number) => {
+        // Use a different prime multiplier for X
+        const val = seededRandom(seed + idx * 7919)
+        return min + val * (max - min)
+      }
+      
+      const getSeededValueY = (idx: number, min: number, max: number) => {
+        // Use a different prime multiplier for Y
+        const val = seededRandom(seed + idx * 9973)
         return min + val * (max - min)
       }
 
-      const baseX = getSeededValue(index, 0.05, 0.95)
-      const baseY = getSeededValue(index, 0.05, 0.95)
+      const baseX = getSeededValueX(index, 0.05, 0.95)
+      const baseY = getSeededValueY(index, 0.05, 0.95)
       const isInteractive = seededRandom(seed + index * 7) < 0.4
 
       bits.push({
