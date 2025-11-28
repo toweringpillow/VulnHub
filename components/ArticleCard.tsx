@@ -39,9 +39,12 @@ export default function ArticleCard({ article }: ArticleCardProps) {
         
         {article.in_wild === 'Yes' && (
           <div className="flex-shrink-0">
-            <div className="flex items-center space-x-1.5 px-3 py-1.5 bg-gradient-to-r from-destructive/30 to-destructive/20 text-destructive rounded-lg text-xs font-semibold border border-destructive/40 shadow-lg shadow-destructive/20 animate-pulse">
+            <div 
+              className="flex items-center space-x-1.5 px-3 py-1.5 bg-gradient-to-r from-destructive/30 to-destructive/20 text-destructive rounded-lg text-xs font-semibold border border-destructive/40 shadow-lg shadow-destructive/20 animate-pulse"
+              title="This vulnerability is being actively exploited by attackers in real-world attacks"
+            >
               <AlertTriangle className="w-4 h-4" />
-              <span>In the Wild</span>
+              <span>Actively Exploited</span>
             </div>
           </div>
         )}

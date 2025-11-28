@@ -160,7 +160,10 @@ export default async function ArticleDetailPage({ params }: PageProps) {
 
               {article.in_wild === 'Yes' && (
                 <div className="flex-shrink-0">
-                  <div className="flex items-center space-x-2 px-4 py-2 bg-destructive/20 text-destructive rounded-lg text-sm font-medium border border-destructive/30">
+                  <div 
+                    className="flex items-center space-x-2 px-4 py-2 bg-destructive/20 text-destructive rounded-lg text-sm font-medium border border-destructive/30"
+                    title="This vulnerability is being actively exploited by attackers in real-world attacks"
+                  >
                     <AlertTriangle className="w-5 h-5" />
                     <span>Actively Exploited</span>
                   </div>
