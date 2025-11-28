@@ -51,6 +51,11 @@ interface Bit {
   animationSpeed: number
   peckPhase: number
   peckTimer: number
+  circleAngle: number // Angle for circling around mouse
+  circleRadius: number // Distance to maintain while circling
+  circleSpeed: number // Speed of circling
+  nextPeckDelay: number // Random delay before next peck
+  circling: boolean // Whether currently circling
 }
 
 export default function BinaryHeader() {
@@ -92,6 +97,11 @@ export default function BinaryHeader() {
         animationSpeed: 0.5 + seededRandom(seed + index * 23) * 0.5,
         peckPhase: 0,
         peckTimer: 0,
+        circleAngle: seededRandom(seed + index * 29) * Math.PI * 2,
+        circleRadius: 0.06 + seededRandom(seed + index * 31) * 0.04, // 0.06 to 0.10
+        circleSpeed: 0.5 + seededRandom(seed + index * 37) * 1.5, // 0.5 to 2.0
+        nextPeckDelay: 0.5 + seededRandom(seed + index * 41) * 2.0, // 0.5 to 2.5 seconds
+        circling: false,
       })
     })
 
@@ -150,24 +160,32 @@ export default function BinaryHeader() {
     // Set canvas size
     const resizeCanvas = () => {
       const rect = canvas.getBoundingClientRect()
+      // Use CSS pixel dimensions for simplicity
       canvas.width = rect.width
       canvas.height = rect.height
     }
 
     resizeCanvas()
+    const resizeObserver = new ResizeObserver(() => {
+      resizeCanvas()
+    })
+    resizeObserver.observe(canvas)
+    
     window.addEventListener('resize', resizeCanvas)
 
-    const ATTRACTION_DISTANCE = 0.15
-    const PECK_DISTANCE = 0.04
-    const ATTRACTION_STRENGTH = 0.0006 // Reduced for smoother approach
-    const RETREAT_STRENGTH = 0.0015 // Increased for faster retreat
+    const ATTRACTION_DISTANCE = 0.25 // Expanded from 0.15
+    const CIRCLE_DISTANCE = 0.08 // Start circling at this distance
+    const PECK_DISTANCE = 0.05 // Slightly increased
+    const ATTRACTION_STRENGTH = 0.0005 // Reduced for smoother approach
+    const CIRCLE_STRENGTH = 0.0008 // Force to maintain circle
+    const RETREAT_STRENGTH = 0.0018 // Increased for faster retreat
     const FRICTION = 0.94 // Increased friction for less bouncing
     const MAX_SPEED = 0.0025 // Slightly reduced max speed
     const RETURN_STRENGTH = 0.0003 // Reduced for smoother return
     const RETURN_FRICTION = 0.96 // Higher friction when returning
     const FLOAT_AMPLITUDE = 0.02
-    const PECK_DURATION = 0.15 // Quick peck duration
-    const RETREAT_DURATION = 0.3 // Retreat duration before reset
+    const PECK_DURATION = 0.1 // Quick peck duration
+    const RETREAT_DURATION = 0.25 // Retreat duration before reset
 
     const animate = (currentTime: number) => {
       if (!ctx) return
@@ -192,15 +210,16 @@ export default function BinaryHeader() {
         bit.angle += bit.rotationSpeed * deltaSeconds * 60
 
         if (bit.isInteractive && mousePos) {
-          // Interactive behavior - fish-like attraction
+          // Interactive behavior - fish-like attraction with circling
           const dx = mousePos.x - bit.x
           const dy = mousePos.y - bit.y
           const distance = Math.sqrt(dx * dx + dy * dy)
 
           bit.peckTimer += deltaSeconds
 
-          if (distance < ATTRACTION_DISTANCE && distance > PECK_DISTANCE) {
+          if (distance < ATTRACTION_DISTANCE && distance > CIRCLE_DISTANCE) {
             // Approaching phase - smooth swim toward mouse
+            bit.circling = false
             if (bit.peckPhase !== 0) {
               // Reset if coming from peck/retreat
               bit.peckPhase = 0
@@ -211,8 +230,43 @@ export default function BinaryHeader() {
             const force = ATTRACTION_STRENGTH * (1 - distance / ATTRACTION_DISTANCE)
             bit.vx += Math.cos(angle) * force * deltaSeconds * 60
             bit.vy += Math.sin(angle) * force * deltaSeconds * 60
+          } else if (distance <= CIRCLE_DISTANCE && distance > PECK_DISTANCE) {
+            // Circling phase - circle around mouse before pecking
+            bit.circling = true
+            
+            // Update circle angle
+            bit.circleAngle += bit.circleSpeed * deltaSeconds
+            
+            // Calculate desired position on circle
+            const targetX = mousePos.x + Math.cos(bit.circleAngle) * bit.circleRadius
+            const targetY = mousePos.y + Math.sin(bit.circleAngle) * bit.circleRadius
+            
+            // Move toward circle position
+            const circleDx = targetX - bit.x
+            const circleDy = targetY - bit.y
+            const circleDist = Math.sqrt(circleDx * circleDx + circleDy * circleDy)
+            
+            if (circleDist > 0.01) {
+              const circleAngle = Math.atan2(circleDy, circleDx)
+              const circleForce = CIRCLE_STRENGTH * Math.min(circleDist / bit.circleRadius, 1)
+              bit.vx += Math.cos(circleAngle) * circleForce * deltaSeconds * 60
+              bit.vy += Math.sin(circleAngle) * circleForce * deltaSeconds * 60
+            }
+            
+            // Random peck timing - check if it's time to peck
+            if (bit.peckPhase === 0 && bit.peckTimer >= bit.nextPeckDelay) {
+              // Random chance to peck (30% chance per check)
+              if (seededRandom(Date.now() + bit.x * 1000 + bit.y * 1000) < 0.3) {
+                bit.peckPhase = 1
+                bit.peckTimer = 0
+                // Reset delay for next peck
+                bit.nextPeckDelay = 0.5 + seededRandom(Date.now() + bit.x * 2000) * 2.0
+              }
+            }
           } else if (distance <= PECK_DISTANCE) {
             // Pecking phase - quick approach, brief pause, then retreat
+            bit.circling = false
+            
             if (bit.peckPhase === 0) {
               // Start pecking
               bit.peckPhase = 1
@@ -222,8 +276,8 @@ export default function BinaryHeader() {
               if (bit.peckTimer < PECK_DURATION) {
                 const angle = Math.atan2(dy, dx)
                 // Quick forward movement
-                bit.vx += Math.cos(angle) * 0.002 * deltaSeconds * 60
-                bit.vy += Math.sin(angle) * 0.002 * deltaSeconds * 60
+                bit.vx += Math.cos(angle) * 0.0025 * deltaSeconds * 60
+                bit.vy += Math.sin(angle) * 0.0025 * deltaSeconds * 60
               } else {
                 // Switch to retreat
                 bit.peckPhase = 2
@@ -237,13 +291,15 @@ export default function BinaryHeader() {
                 bit.vx -= Math.cos(angle) * RETREAT_STRENGTH * deltaSeconds * 60
                 bit.vy -= Math.sin(angle) * RETREAT_STRENGTH * deltaSeconds * 60
               } else {
-                // Reset to approach phase
+                // Reset to circling/approach phase
                 bit.peckPhase = 0
                 bit.peckTimer = 0
+                bit.nextPeckDelay = 0.5 + seededRandom(Date.now() + bit.x * 3000) * 2.0
               }
             }
           } else {
             // Too far away - reset to normal
+            bit.circling = false
             if (bit.peckPhase !== 0) {
               bit.peckPhase = 0
               bit.peckTimer = 0
@@ -311,7 +367,7 @@ export default function BinaryHeader() {
         // Draw bit
         const pixelX = bit.x * canvas.width
         const pixelY = bit.y * canvas.height
-        const opacity = bit.isInteractive && mousePos ? 0.6 : 0.4
+        const opacity = bit.isInteractive && mousePos ? (bit.circling ? 0.7 : 0.6) : 0.4
 
         ctx.save()
         ctx.translate(pixelX, pixelY)
