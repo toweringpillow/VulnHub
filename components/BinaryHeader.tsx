@@ -206,8 +206,8 @@ export default function BinaryHeader() {
     const RETREAT_STRENGTH = 0.0018 // Increased for faster retreat
     const FRICTION = 0.94 // Increased friction for less bouncing
     const MAX_SPEED = 0.0025 // Slightly reduced max speed
-    const RETURN_STRENGTH = 0.0003 // Reduced for smoother return
-    const RETURN_FRICTION = 0.96 // Higher friction when returning
+    const RETURN_STRENGTH = 0.00015 // Much reduced for slower, smoother return
+    const RETURN_FRICTION = 0.98 // Higher friction when returning for gradual slowdown
     const FLOAT_AMPLITUDE = 0.02
     const PECK_DURATION = 0.1 // Quick peck duration
     const RETREAT_DURATION = 0.25 // Retreat duration before reset
@@ -306,10 +306,13 @@ export default function BinaryHeader() {
                 }
               }
             } else if (bit.peckPhase === 1) {
-              // Brief peck forward toward mouse
+              // Brief peck forward toward mouse - recalculate angle each frame
               if (bit.peckTimer < PECK_DURATION) {
-                const angle = Math.atan2(dy, dx)
-                // Quick forward movement
+                // Recalculate angle to current mouse position
+                const currentDx = mousePos.x - bit.x
+                const currentDy = mousePos.y - bit.y
+                const angle = Math.atan2(currentDy, currentDx)
+                // Quick forward movement directly toward cursor
                 bit.vx += Math.cos(angle) * 0.003 * deltaSeconds * 60
                 bit.vy += Math.sin(angle) * 0.003 * deltaSeconds * 60
                 bit.peckTimer += deltaSeconds
@@ -319,10 +322,13 @@ export default function BinaryHeader() {
                 bit.peckTimer = 0
               }
             } else if (bit.peckPhase === 2) {
-              // Retreat phase - back away quickly, then return to circling
+              // Retreat phase - back away from current mouse position
               if (bit.peckTimer < RETREAT_DURATION) {
-                const angle = Math.atan2(dy, dx)
-                // Strong retreat force
+                // Recalculate angle to current mouse position
+                const currentDx = mousePos.x - bit.x
+                const currentDy = mousePos.y - bit.y
+                const angle = Math.atan2(currentDy, currentDx)
+                // Strong retreat force away from cursor
                 bit.vx -= Math.cos(angle) * RETREAT_STRENGTH * deltaSeconds * 60
                 bit.vy -= Math.sin(angle) * RETREAT_STRENGTH * deltaSeconds * 60
                 bit.peckTimer += deltaSeconds
@@ -343,9 +349,12 @@ export default function BinaryHeader() {
               bit.peckPhase = 1
               bit.peckTimer = 0
             } else if (bit.peckPhase === 1) {
-              // Brief peck forward
+              // Brief peck forward toward cursor
               if (bit.peckTimer < PECK_DURATION) {
-                const angle = Math.atan2(dy, dx)
+                // Recalculate angle to current mouse position
+                const currentDx = mousePos.x - bit.x
+                const currentDy = mousePos.y - bit.y
+                const angle = Math.atan2(currentDy, currentDx)
                 bit.vx += Math.cos(angle) * 0.003 * deltaSeconds * 60
                 bit.vy += Math.sin(angle) * 0.003 * deltaSeconds * 60
                 bit.peckTimer += deltaSeconds
@@ -354,9 +363,12 @@ export default function BinaryHeader() {
                 bit.peckTimer = 0
               }
             } else if (bit.peckPhase === 2) {
-              // Retreat
+              // Retreat from cursor
               if (bit.peckTimer < RETREAT_DURATION) {
-                const angle = Math.atan2(dy, dx)
+                // Recalculate angle to current mouse position
+                const currentDx = mousePos.x - bit.x
+                const currentDy = mousePos.y - bit.y
+                const angle = Math.atan2(currentDy, currentDx)
                 bit.vx -= Math.cos(angle) * RETREAT_STRENGTH * deltaSeconds * 60
                 bit.vy -= Math.sin(angle) * RETREAT_STRENGTH * deltaSeconds * 60
                 bit.peckTimer += deltaSeconds
@@ -396,36 +408,37 @@ export default function BinaryHeader() {
           bit.x = Math.max(0.02, Math.min(0.98, bit.x))
           bit.y = Math.max(0.02, Math.min(0.98, bit.y))
         } else if (bit.isInteractive && !mousePos) {
-          // Return to base position - smooth and gradual
+          // Return to base position - very slow and gradual
           const dx = bit.baseX - bit.x
           const dy = bit.baseY - bit.y
           const distance = Math.sqrt(dx * dx + dy * dy)
 
-          if (distance > 0.001) {
+          if (distance > 0.0005) {
             const angle = Math.atan2(dy, dx)
-            // Smooth return with easing - stronger when far, gentler when close
-            const returnForce = RETURN_STRENGTH * (0.3 + 0.7 * Math.min(distance / 0.1, 1))
+            // Very gentle return force - gets even gentler as we approach
+            const easingFactor = Math.min(distance / 0.15, 1) // Ease out as we get closer
+            const returnForce = RETURN_STRENGTH * easingFactor
             bit.vx += Math.cos(angle) * returnForce * deltaSeconds * 60
             bit.vy += Math.sin(angle) * returnForce * deltaSeconds * 60
             
-            // Higher friction when returning for smoother motion
+            // High friction when returning for very smooth, gradual motion
             bit.vx *= Math.pow(RETURN_FRICTION, deltaSeconds * 60)
             bit.vy *= Math.pow(RETURN_FRICTION, deltaSeconds * 60)
             
             bit.x += bit.vx * deltaSeconds * 60
             bit.y += bit.vy * deltaSeconds * 60
             
-            // Gradually slow down as we approach
-            if (distance < 0.01) {
-              bit.vx *= 0.9
-              bit.vy *= 0.9
+            // Gradually slow down as we approach base
+            if (distance < 0.02) {
+              bit.vx *= 0.95
+              bit.vy *= 0.95
             }
           } else {
-            // Very close - smoothly settle
-            bit.x += (bit.baseX - bit.x) * 0.1
-            bit.y += (bit.baseY - bit.y) * 0.1
-            bit.vx *= 0.8
-            bit.vy *= 0.8
+            // Very close - very slowly settle to exact position
+            bit.x += (bit.baseX - bit.x) * 0.05
+            bit.y += (bit.baseY - bit.y) * 0.05
+            bit.vx *= 0.9
+            bit.vy *= 0.9
           }
         } else {
           // Non-interactive: floating animation
