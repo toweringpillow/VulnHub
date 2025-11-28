@@ -64,6 +64,9 @@ interface Bit {
   circleSpeed: number // Speed of circling
   circleOffsetX: number // Horizontal offset from mouse
   circleOffsetY: number // Vertical offset from mouse
+  wanderAngle: number // Random wandering angle for swim pattern
+  wanderChangeTimer: number // Timer for changing wander direction
+  wanderChangeInterval: number // How often to change wander direction
   nextPeckDelay: number // Random delay before next peck
   circling: boolean // Whether currently circling
 }
@@ -135,6 +138,10 @@ export default function BinaryHeader() {
         // Small random offsets for more varied patterns
         circleOffsetX: (seededRandom(seed + index * 53) - 0.5) * 0.01, // -0.005 to 0.005
         circleOffsetY: (seededRandom(seed + index * 59) - 0.5) * 0.01, // -0.005 to 0.005
+        // Random swim pattern variables
+        wanderAngle: seededRandom(seed + index * 61) * Math.PI * 2,
+        wanderChangeTimer: 0,
+        wanderChangeInterval: 0.5 + seededRandom(seed + index * 67) * 1.5, // 0.5 to 2.0 seconds
         nextPeckDelay: 0.2 + seededRandom(seed + index * 41) * 1.3, // 0.2 to 1.5 seconds (shorter)
         circling: false,
       })
@@ -266,30 +273,42 @@ export default function BinaryHeader() {
             bit.vx += Math.cos(angle) * force * deltaSeconds * 60
             bit.vy += Math.sin(angle) * force * deltaSeconds * 60
           } else if (distance <= CIRCLE_DISTANCE) {
-            // Circling phase - circle around mouse, can peck at any time
+            // Swimming phase - random swim pattern around mouse, can peck at any time
             bit.circling = true
             
-            // Update circle angle
-            bit.circleAngle += bit.circleSpeed * deltaSeconds
+            // Update wander angle randomly for swim pattern
+            bit.wanderChangeTimer += deltaSeconds
+            if (bit.wanderChangeTimer >= bit.wanderChangeInterval) {
+              // Change wander direction randomly
+              bit.wanderAngle += (Math.random() - 0.5) * Math.PI * 0.5 // Random change up to 90 degrees
+              bit.wanderChangeTimer = 0
+              bit.wanderChangeInterval = 0.5 + Math.random() * 1.5 // New random interval
+            }
             
-            // Calculate desired position on circle with random shape and offset
-            // Use different X and Y radii for slight variation, but keep it mostly circular
-            const targetX = mousePos.x + bit.circleOffsetX + Math.cos(bit.circleAngle) * bit.circleRadiusX
-            const targetY = mousePos.y + bit.circleOffsetY + Math.sin(bit.circleAngle) * bit.circleRadiusY
-            
-            // Move toward circle position (only if not pecking)
+            // Random swim pattern - combination of maintaining distance and wandering
             if (bit.peckPhase === 0) {
-              const circleDx = targetX - bit.x
-              const circleDy = targetY - bit.y
-              const circleDist = Math.sqrt(circleDx * circleDx + circleDy * circleDy)
+              // Calculate angle to mouse
+              const toMouseAngle = Math.atan2(dy, dx)
               
-              if (circleDist > 0.01) {
-                const circleAngle = Math.atan2(circleDy, circleDx)
-                const avgRadius = (bit.circleRadiusX + bit.circleRadiusY) / 2
-                const circleForce = CIRCLE_STRENGTH * Math.min(circleDist / avgRadius, 1)
-                bit.vx += Math.cos(circleAngle) * circleForce * deltaSeconds * 60
-                bit.vy += Math.sin(circleAngle) * circleForce * deltaSeconds * 60
-              }
+              // Maintain distance from mouse (slight pull away if too close, pull in if too far)
+              const desiredDistance = bit.circleRadius
+              const distanceError = distance - desiredDistance
+              const maintainForce = distanceError * 0.001 // Gentle force to maintain distance
+              
+              // Apply maintain distance force
+              bit.vx += Math.cos(toMouseAngle) * maintainForce * deltaSeconds * 60
+              bit.vy += Math.sin(toMouseAngle) * maintainForce * deltaSeconds * 60
+              
+              // Add random wandering/swimming motion (perpendicular to mouse direction)
+              const wanderForce = 0.0004 // Random swim force
+              const perpendicularAngle = toMouseAngle + Math.PI / 2 // Perpendicular to mouse
+              bit.vx += Math.cos(perpendicularAngle + bit.wanderAngle) * wanderForce * deltaSeconds * 60
+              bit.vy += Math.sin(perpendicularAngle + bit.wanderAngle) * wanderForce * deltaSeconds * 60
+              
+              // Add some tangential motion for more natural swimming
+              const tangentialAngle = toMouseAngle + Math.PI / 2
+              bit.vx += Math.cos(tangentialAngle) * bit.circleSpeed * 0.0003 * deltaSeconds * 60
+              bit.vy += Math.sin(tangentialAngle) * bit.circleSpeed * 0.0003 * deltaSeconds * 60
             }
             
             // Random peck timing - truly random while circling
@@ -322,9 +341,10 @@ export default function BinaryHeader() {
                 const currentDx = mousePos.x - bit.x
                 const currentDy = mousePos.y - bit.y
                 const angle = Math.atan2(currentDy, currentDx)
-                // Quick forward movement directly toward cursor
-                bit.vx += Math.cos(angle) * 0.003 * deltaSeconds * 60
-                bit.vy += Math.sin(angle) * 0.003 * deltaSeconds * 60
+                // Strong forward movement directly toward cursor (overrides swimming)
+                const peckForce = 0.006 // Increased from 0.003 for stronger peck
+                bit.vx += Math.cos(angle) * peckForce * deltaSeconds * 60
+                bit.vy += Math.sin(angle) * peckForce * deltaSeconds * 60
                 bit.peckTimer += deltaSeconds
               } else {
                 // Switch to retreat
@@ -365,8 +385,10 @@ export default function BinaryHeader() {
                 const currentDx = mousePos.x - bit.x
                 const currentDy = mousePos.y - bit.y
                 const angle = Math.atan2(currentDy, currentDx)
-                bit.vx += Math.cos(angle) * 0.003 * deltaSeconds * 60
-                bit.vy += Math.sin(angle) * 0.003 * deltaSeconds * 60
+                // Strong peck force to ensure movement toward cursor
+                const peckForce = 0.006 // Increased for stronger peck
+                bit.vx += Math.cos(angle) * peckForce * deltaSeconds * 60
+                bit.vy += Math.sin(angle) * peckForce * deltaSeconds * 60
                 bit.peckTimer += deltaSeconds
               } else {
                 bit.peckPhase = 2
