@@ -347,8 +347,23 @@ export default function BinaryHeader() {
                 const currentDx = mousePos.x - bit.x
                 const currentDy = mousePos.y - bit.y
                 const angle = Math.atan2(currentDy, currentDx)
-                // Strong forward movement directly toward cursor (overrides swimming)
-                const peckForce = 0.006 // Increased from 0.003 for stronger peck
+                
+                // Strong peck force directly toward cursor - override any swimming velocity
+                const peckForce = 0.01 // Much stronger force to ensure movement toward cursor
+                
+                // Cancel out velocity that's not toward cursor and apply strong peck force
+                const currentSpeed = Math.sqrt(bit.vx * bit.vx + bit.vy * bit.vy)
+                const currentAngle = Math.atan2(bit.vy, bit.vx)
+                const angleDiff = angle - currentAngle
+                
+                // If velocity is not toward cursor, reduce it
+                if (Math.abs(angleDiff) > 0.1) {
+                  // Dampen non-cursor velocity
+                  bit.vx *= 0.7
+                  bit.vy *= 0.7
+                }
+                
+                // Apply strong peck force directly toward cursor
                 bit.vx += Math.cos(angle) * peckForce * deltaSeconds * 60
                 bit.vy += Math.sin(angle) * peckForce * deltaSeconds * 60
                 bit.peckTimer += deltaSeconds
@@ -391,8 +406,23 @@ export default function BinaryHeader() {
                 const currentDx = mousePos.x - bit.x
                 const currentDy = mousePos.y - bit.y
                 const angle = Math.atan2(currentDy, currentDx)
-                // Strong peck force to ensure movement toward cursor
-                const peckForce = 0.006 // Increased for stronger peck
+                
+                // Strong peck force directly toward cursor - override any swimming velocity
+                const peckForce = 0.01 // Much stronger force to ensure movement toward cursor
+                
+                // Cancel out velocity that's not toward cursor and apply strong peck force
+                const currentSpeed = Math.sqrt(bit.vx * bit.vx + bit.vy * bit.vy)
+                const currentAngle = Math.atan2(bit.vy, bit.vx)
+                const angleDiff = angle - currentAngle
+                
+                // If velocity is not toward cursor, reduce it
+                if (Math.abs(angleDiff) > 0.1) {
+                  // Dampen non-cursor velocity
+                  bit.vx *= 0.7
+                  bit.vy *= 0.7
+                }
+                
+                // Apply strong peck force directly toward cursor
                 bit.vx += Math.cos(angle) * peckForce * deltaSeconds * 60
                 bit.vy += Math.sin(angle) * peckForce * deltaSeconds * 60
                 bit.peckTimer += deltaSeconds
