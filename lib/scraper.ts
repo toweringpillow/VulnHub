@@ -21,6 +21,95 @@ const parser = new Parser({
 })
 
 /**
+ * Company name mappings: lowercase pattern -> normalized display name
+ */
+const COMPANY_MAPPINGS: Map<string, string> = new Map([
+  ['microsoft', 'Microsoft'],
+  ['msft', 'Microsoft'],
+  ['windows', 'Microsoft'],
+  ['apple', 'Apple'],
+  ['ios', 'Apple'],
+  ['macos', 'Apple'],
+  ['iphone', 'Apple'],
+  ['google', 'Google'],
+  ['android', 'Google'],
+  ['chrome', 'Google'],
+  ['amazon', 'Amazon'],
+  ['aws', 'Amazon'],
+  ['meta', 'Meta'],
+  ['facebook', 'Meta'],
+  ['twitter', 'Twitter'],
+  ['x.com', 'Twitter'],
+  ['linkedin', 'LinkedIn'],
+  ['tesla', 'Tesla'],
+  ['nvidia', 'NVIDIA'],
+  ['intel', 'Intel'],
+  ['amd', 'AMD'],
+  ['cisco', 'Cisco'],
+  ['fortinet', 'Fortinet'],
+  ['palo alto', 'Palo Alto'],
+  ['paloaltonetworks', 'Palo Alto'],
+  ['vmware', 'VMware'],
+  ['oracle', 'Oracle'],
+  ['adobe', 'Adobe'],
+  ['apache', 'Apache'],
+  ['nginx', 'Nginx'],
+  ['redis', 'Redis'],
+  ['mongodb', 'MongoDB'],
+  ['mysql', 'MySQL'],
+  ['postgresql', 'PostgreSQL'],
+  ['postgres', 'PostgreSQL'],
+  ['splunk', 'Splunk'],
+  ['solarwinds', 'SolarWinds'],
+  ['okta', 'Okta'],
+  ['crowdstrike', 'CrowdStrike'],
+  ['sentinelone', 'SentinelOne'],
+  ['trend micro', 'Trend Micro'],
+  ['symantec', 'Symantec'],
+  ['proofpoint', 'Proofpoint'],
+  ['check point', 'Check Point'],
+  ['checkpoint', 'Check Point'],
+  ['sophos', 'Sophos'],
+  ['kaspersky', 'Kaspersky'],
+  ['bitdefender', 'Bitdefender'],
+  ['malwarebytes', 'Malwarebytes'],
+  ['mimecast', 'Mimecast'],
+  ['barracuda', 'Barracuda'],
+  ['f5', 'F5'],
+  ['juniper', 'Juniper'],
+  ['arista', 'Arista'],
+  ['dell', 'Dell'],
+  ['hp', 'HP'],
+  ['hewlett packard', 'HP'],
+  ['lenovo', 'Lenovo'],
+  ['ibm', 'IBM'],
+  ['red hat', 'Red Hat'],
+  ['redhat', 'Red Hat'],
+  ['canonical', 'Canonical'],
+  ['ubuntu', 'Canonical'],
+  ['suse', 'SUSE'],
+  ['debian', 'Debian'],
+])
+
+/**
+ * Extract company/product names from article text and return normalized names
+ */
+function extractCompanyNames(text: string): string[] {
+  const lowerText = text.toLowerCase()
+  const foundCompanies = new Set<string>()
+  
+  for (const [pattern, normalizedName] of COMPANY_MAPPINGS.entries()) {
+    // Create regex pattern - handle multi-word companies
+    const regex = new RegExp(`\\b${pattern.replace(/\s+/g, '\\s+')}\\b`, 'i')
+    if (regex.test(lowerText)) {
+      foundCompanies.add(normalizedName)
+    }
+  }
+  
+  return Array.from(foundCompanies)
+}
+
+/**
  * Extract breach/vulnerability signature from article
  * Returns a normalized string that identifies the same breach/vulnerability
  */
@@ -422,6 +511,31 @@ export async function scrapeArticles(): Promise<ScrapeResult> {
           for (const [tagName, tagId] of tagMap.entries()) {
             const regex = new RegExp(`\\b${tagName}\\b`, 'i')
             if (regex.test(searchText)) {
+              articleTags.push(tagId)
+            }
+          }
+
+          // Extract and add company/product tags
+          const companyNames = extractCompanyNames(`${title} ${summary} ${aiResult?.ai_summary || ''}`)
+          for (const companyName of companyNames) {
+            let tagId = tagMap.get(companyName.toLowerCase())
+            
+            // Create tag if it doesn't exist
+            if (!tagId) {
+              const { data: newTag, error: tagError } = await supabaseAdmin
+                .from('tags')
+                .insert({ name: companyName })
+                .select('id')
+                .single()
+              
+              if (!tagError && newTag) {
+                tagId = newTag.id
+                // Update tagMap for future use in this run
+                tagMap.set(companyName.toLowerCase(), tagId)
+              }
+            }
+            
+            if (tagId && !articleTags.includes(tagId)) {
               articleTags.push(tagId)
             }
           }

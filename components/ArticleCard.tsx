@@ -2,13 +2,16 @@ import Link from 'next/link'
 import { ArticleWithTags } from '@/types/database'
 import { formatRelativeTime, formatAIField, slugify } from '@/lib/utils'
 import { ExternalLink, Clock, AlertTriangle } from 'lucide-react'
+import { COMPANY_TAG_NAMES } from '@/lib/constants'
 
 interface ArticleCardProps {
   article: ArticleWithTags
 }
 
 export default function ArticleCard({ article }: ArticleCardProps) {
-  const tags = article.article_tags?.map((at) => at.tags) || []
+  const allTags = article.article_tags?.map((at) => at.tags) || []
+  // Filter out company tags on listing page to avoid clutter
+  const tags = allTags.filter((tag) => !COMPANY_TAG_NAMES.includes(tag.name))
 
   // Check if article has CVE
   const hasCVE = /CVE-\d{4}-\d+/i.test(article.title)
