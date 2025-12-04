@@ -95,7 +95,7 @@ const COMPANY_MAPPINGS: Map<string, string> = new Map([
 /**
  * Extract company/product names from article text and return normalized names
  */
-function extractCompanyNames(text: string): string[] {
+export function extractCompanyNames(text: string): string[] {
   const lowerText = text.toLowerCase()
   const foundCompanies = new Set<string>()
   
