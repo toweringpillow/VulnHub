@@ -1,53 +1,62 @@
 import { NextResponse } from 'next/server'
-import { headers } from 'next/headers'
-import { scrapeArticles } from '@/lib/scraper'
 
 export const runtime = 'nodejs'
-export const maxDuration = 120 // 120 seconds (2 minutes) timeout for scraping multiple feeds
+export const maxDuration = 300 // 300 seconds (5 minutes) timeout for scraping multiple feeds
 
 /**
  * Cron endpoint for RSS scraping
  * Called by external cron service (GitHub Actions, cron-job.org, etc.)
  * Protected by Authorization header with CRON_SECRET
  */
-export async function POST(_request: Request) {
+export async function POST(request: Request) {
   try {
-    // Verify cron secret
-    const headersList = headers()
-    const authHeader = headersList.get('authorization')
+    // Get auth header directly from request to avoid potential blocking
+    const authHeader = request.headers.get('authorization')
     const cronSecret = process.env.CRON_SECRET
 
+    // Quick auth check - return immediately if invalid
     if (!cronSecret) {
-      console.error('CRON_SECRET not configured')
       return NextResponse.json(
         { error: 'Server misconfigured' },
         { status: 500 }
       )
     }
 
-    // Check authorization
     const expectedAuth = `Bearer ${cronSecret}`
     if (authHeader !== expectedAuth) {
-      console.warn('Unauthorized cron attempt', {
-        authHeaderLength: authHeader?.length ?? 0,
-        expectedLength: expectedAuth.length,
-        authHeaderPrefix: authHeader?.substring(0, 10) ?? 'null',
-        expectedPrefix: expectedAuth.substring(0, 10),
-      })
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
       )
     }
 
-    console.log('Starting scheduled scrape...')
-    const result = await scrapeArticles()
+    // Return 202 Accepted IMMEDIATELY - before any imports or async operations
+    const response = NextResponse.json(
+      {
+        success: true,
+        message: 'Scraping started',
+        timestamp: new Date().toISOString(),
+      },
+      { status: 202 }
+    )
 
-    return NextResponse.json({
-      success: true,
-      result,
-      timestamp: new Date().toISOString(),
+    // Dynamically import scrapeArticles AFTER response is prepared to avoid blocking
+    // Use setImmediate to ensure response is sent first
+    setImmediate(async () => {
+      try {
+        const { scrapeArticles } = await import('@/lib/scraper')
+        const result = await scrapeArticles()
+        console.log('Scrape completed successfully', {
+          articlesProcessed: result.articlesProcessed,
+          articlesAdded: result.articlesAdded,
+          articlesSkipped: result.articlesSkipped,
+        })
+      } catch (error) {
+        console.error('Scrape failed:', error)
+      }
     })
+
+    return response
   } catch (error) {
     console.error('Cron scraper error:', error)
     return NextResponse.json(

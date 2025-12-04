@@ -17,6 +17,7 @@ const parser = new Parser({
   customFields: {
     item: [['pubDate', 'published'], ['description', 'summary']],
   },
+  timeout: 30000, // 30 second timeout for RSS feed requests
 })
 
 /**
@@ -286,7 +287,16 @@ export async function scrapeArticles(): Promise<ScrapeResult> {
 
       try {
         console.log(`Scraping feed: ${feed.name}`)
-        const parsed = await parser.parseURL(feed.url)
+        
+        // Add timeout wrapper to prevent hanging on slow feeds
+        const parseWithTimeout = Promise.race([
+          parser.parseURL(feed.url),
+          new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('Feed parsing timeout after 30 seconds')), 30000)
+          ),
+        ])
+        
+        const parsed = await parseWithTimeout as Awaited<ReturnType<typeof parser.parseURL>>
 
         for (const item of parsed.items) {
           result.articlesProcessed++

@@ -39,21 +39,31 @@ jobs:
             exit 1
           fi
           
-          # Extract domain for DNS check
+          # Normalize URL: trim whitespace and remove trailing slashes
+          URL=$(echo "$URL" | xargs | sed 's|/$||')
+          
+          # Extract domain and construct base URL
           if [[ "$URL" =~ ^https?:// ]]; then
+            # URL already has protocol, extract domain
             DOMAIN=$(echo "$URL" | sed -E 's|^https?://||' | cut -d'/' -f1)
-            URL="$URL"
+            # Get base URL (protocol + domain, no path)
+            BASE_URL=$(echo "$URL" | sed -E 's|^(https?://[^/]+).*|\1|')
           else
+            # URL doesn't have protocol, extract domain and add https://
             DOMAIN=$(echo "$URL" | cut -d'/' -f1)
-            URL="https://$URL"
+            BASE_URL="https://${DOMAIN}"
           fi
           
+          # Construct full endpoint URL
+          FULL_URL="${BASE_URL}/api/cron/world-news"
+          
           echo "✅ Extracted domain: ${DOMAIN}"
-          echo "✅ Full URL: ${URL}/api/cron/world-news"
+          echo "✅ Base URL: ${BASE_URL}"
+          echo "✅ Full URL: ${FULL_URL}"
           
           # Make the request with error handling
           echo "📡 Making request to world news scraper endpoint..."
-          echo "📡 URL: ${URL}/api/cron/world-news"
+          echo "📡 URL: ${FULL_URL}"
           
           set +e  # Don't exit on error immediately
           response=$(curl --location-trusted -X POST \
@@ -63,7 +73,7 @@ jobs:
             --connect-timeout 10 \
             --max-time 30 \
             -v \
-            "${URL}/api/cron/world-news" 2>&1)
+            "${FULL_URL}" 2>&1)
           CURL_EXIT=$?
           set -e
           
@@ -71,6 +81,20 @@ jobs:
             echo "❌ curl failed with exit code: $CURL_EXIT"
             echo "Full curl output:"
             echo "$response"
+            
+            # Check if it's a timeout error (exit code 28)
+            if [ $CURL_EXIT -eq 28 ]; then
+              echo ""
+              echo "⚠️  Timeout error detected!"
+              echo "💡 This might be due to:"
+              echo "   1. Vercel platform timeout limits (check your plan)"
+              echo "   2. Scraper taking longer than expected"
+              echo "   3. Network issues"
+              echo ""
+              echo "The scraper may still be processing in the background."
+              echo "Check your Vercel logs to see if the scrape completed."
+            fi
+            
             exit 1
           fi
           
@@ -86,8 +110,14 @@ jobs:
           echo "========================"
           
           # Check if request was successful
+          # Accept both 200 (completed) and 202 (accepted/processing) as success
           if [ "$http_code" -ge 200 ] && [ "$http_code" -lt 300 ]; then
-            echo "✅ World news scraper triggered successfully (HTTP $http_code)"
+            if [ "$http_code" -eq 202 ]; then
+              echo "✅ World news scraper accepted and processing in background (HTTP 202)"
+              echo "💡 The scraper will continue running on the server even though this workflow completed"
+            else
+              echo "✅ World news scraper triggered successfully (HTTP $http_code)"
+            fi
           else
             echo "❌ World news scraper failed with HTTP $http_code"
             echo "Full response:"
