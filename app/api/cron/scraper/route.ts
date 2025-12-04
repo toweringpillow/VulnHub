@@ -30,33 +30,44 @@ export async function POST(request: Request) {
       )
     }
 
-    // Return 202 Accepted IMMEDIATELY - before any imports or async operations
-    const response = NextResponse.json(
-      {
-        success: true,
-        message: 'Scraping started',
-        timestamp: new Date().toISOString(),
-      },
-      { status: 202 }
-    )
+    // Import and run scraping - await to ensure it completes before function terminates
+    // On serverless platforms, returning early can terminate the execution context
+    console.log('Starting article scraping...')
+    
+    try {
+      const { scrapeArticles } = await import('@/lib/scraper')
+      const result = await scrapeArticles()
+      
+      console.log('Scrape completed successfully', {
+        articlesProcessed: result.articlesProcessed,
+        articlesAdded: result.articlesAdded,
+        articlesSkipped: result.articlesSkipped,
+      })
 
-    // Dynamically import scrapeArticles AFTER response is prepared to avoid blocking
-    // Use setImmediate to ensure response is sent first
-    setImmediate(async () => {
-      try {
-        const { scrapeArticles } = await import('@/lib/scraper')
-        const result = await scrapeArticles()
-        console.log('Scrape completed successfully', {
+      return NextResponse.json(
+        {
+          success: true,
+          message: 'Scraping completed',
           articlesProcessed: result.articlesProcessed,
           articlesAdded: result.articlesAdded,
           articlesSkipped: result.articlesSkipped,
-        })
-      } catch (error) {
-        console.error('Scrape failed:', error)
-      }
-    })
-
-    return response
+          errors: result.errors.length > 0 ? result.errors : undefined,
+          timestamp: new Date().toISOString(),
+        },
+        { status: 200 }
+      )
+    } catch (scrapeError) {
+      console.error('Scrape failed:', scrapeError)
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Scraping failed',
+          message: scrapeError instanceof Error ? scrapeError.message : 'Unknown error',
+          timestamp: new Date().toISOString(),
+        },
+        { status: 500 }
+      )
+    }
   } catch (error) {
     console.error('Cron scraper error:', error)
     return NextResponse.json(

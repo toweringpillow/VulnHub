@@ -34,27 +34,36 @@ export async function POST(request: Request) {
 
     console.log('Starting world news scrape...')
     
-    // Return 202 Accepted immediately to prevent GitHub Actions timeout
-    // Process scraping in background (Vercel will keep function alive for maxDuration)
-    scrapeWorldNews()
-      .then((count) => {
-        console.log('World news scrape completed successfully', {
-          headlinesScraped: count,
-        })
-      })
-      .catch((error) => {
-        console.error('World news scrape failed:', error)
+    // Await scraping to ensure it completes before function terminates
+    // On serverless platforms, returning early can terminate the execution context
+    try {
+      const count = await scrapeWorldNews()
+      
+      console.log('World news scrape completed', {
+        headlinesScraped: count,
       })
 
-    // Return immediately - scraping continues in background
-    return NextResponse.json(
-      {
-        success: true,
-        message: 'World news scraping started',
-        timestamp: new Date().toISOString(),
-      },
-      { status: 202 } // 202 Accepted - processing in background
-    )
+      return NextResponse.json(
+        {
+          success: true,
+          message: 'World news scraping completed',
+          headlinesScraped: count,
+          timestamp: new Date().toISOString(),
+        },
+        { status: 200 }
+      )
+    } catch (scrapeError) {
+      console.error('World news scrape error:', scrapeError)
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Scraping failed',
+          message: scrapeError instanceof Error ? scrapeError.message : 'Unknown error',
+          timestamp: new Date().toISOString(),
+        },
+        { status: 500 }
+      )
+    }
   } catch (error) {
     console.error('World news scraper error:', error)
     return NextResponse.json(

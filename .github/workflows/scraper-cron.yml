@@ -104,7 +104,7 @@ jobs:
             -H "Content-Type: application/json" \
             -w "\nHTTP_CODE:%{http_code}" \
             --connect-timeout 10 \
-            --max-time 30 \
+            --max-time 180 \
             -v \
             "${FULL_URL}" 2>&1)
           CURL_EXIT=$?
@@ -118,17 +118,14 @@ jobs:
             # Check if it's a timeout error (exit code 28)
             if [ $CURL_EXIT -eq 28 ]; then
               echo ""
-              echo "⚠️  Timeout error detected (90 seconds) - this is a known Vercel platform limit"
-              echo "💡 The scraper endpoint is designed to return immediately, but Vercel may have"
-              echo "   a 90-second proxy timeout that can't be overridden on free/hobby plans."
+              echo "⚠️  Timeout error detected!"
+              echo "💡 This might be due to:"
+              echo "   1. Scraper taking longer than 3 minutes (180 seconds)"
+              echo "   2. Vercel platform timeout limits (check your plan)"
+              echo "   3. Network issues"
               echo ""
-              echo "✅ The scraper is likely still processing in the background on Vercel."
-              echo "   Check your Vercel function logs to verify the scrape completed."
-              echo ""
-              echo "📝 This is expected behavior - the workflow will 'fail' but scraping continues."
-              echo "   Consider this a success if you see scrape logs in Vercel."
-              # Don't exit with error code - treat timeout as acceptable since scraping continues
-              exit 0
+              echo "Check your Vercel logs to see if the scrape completed."
+              exit 1
             fi
             
             exit 1
@@ -146,13 +143,14 @@ jobs:
           echo "========================"
           
           # Check if request was successful
-          # Accept both 200 (completed) and 202 (accepted/processing) as success
           if [ "$http_code" -ge 200 ] && [ "$http_code" -lt 300 ]; then
-            if [ "$http_code" -eq 202 ]; then
-              echo "✅ Scraper accepted and processing in background (HTTP 202)"
-              echo "💡 The scraper will continue running on the server even though this workflow completed"
-            else
-              echo "✅ Scraper triggered successfully (HTTP $http_code)"
+            echo "✅ Scraper completed successfully (HTTP $http_code)"
+            # Try to extract article counts from response if available
+            if echo "$body" | grep -q "articlesAdded"; then
+              processed=$(echo "$body" | grep -o '"articlesProcessed":[0-9]*' | cut -d: -f2 || echo "unknown")
+              added=$(echo "$body" | grep -o '"articlesAdded":[0-9]*' | cut -d: -f2 || echo "unknown")
+              skipped=$(echo "$body" | grep -o '"articlesSkipped":[0-9]*' | cut -d: -f2 || echo "unknown")
+              echo "📰 Articles processed: $processed | Added: $added | Skipped: $skipped"
             fi
           else
             echo "❌ Scraper failed with HTTP $http_code"

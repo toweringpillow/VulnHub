@@ -71,7 +71,7 @@ jobs:
             -H "Content-Type: application/json" \
             -w "\nHTTP_CODE:%{http_code}" \
             --connect-timeout 10 \
-            --max-time 30 \
+            --max-time 60 \
             -v \
             "${FULL_URL}" 2>&1)
           CURL_EXIT=$?
@@ -110,13 +110,12 @@ jobs:
           echo "========================"
           
           # Check if request was successful
-          # Accept both 200 (completed) and 202 (accepted/processing) as success
           if [ "$http_code" -ge 200 ] && [ "$http_code" -lt 300 ]; then
-            if [ "$http_code" -eq 202 ]; then
-              echo "✅ World news scraper accepted and processing in background (HTTP 202)"
-              echo "💡 The scraper will continue running on the server even though this workflow completed"
-            else
-              echo "✅ World news scraper triggered successfully (HTTP $http_code)"
+            echo "✅ World news scraper completed successfully (HTTP $http_code)"
+            # Try to extract headline count from response if available
+            if echo "$body" | grep -q "headlinesScraped"; then
+              headlines=$(echo "$body" | grep -o '"headlinesScraped":[0-9]*' | cut -d: -f2 || echo "unknown")
+              echo "📰 Headlines scraped: $headlines"
             fi
           else
             echo "❌ World news scraper failed with HTTP $http_code"
