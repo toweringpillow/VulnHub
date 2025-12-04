@@ -1,0 +1,86 @@
+name: Backfill Company Tags
+
+on:
+  workflow_dispatch: # Manual trigger only
+
+jobs:
+  backfill:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check Status
+        run: |
+          echo "🔄 Starting company tag backfill for existing articles..."
+          echo "🕐 Current UTC time: $(date -u)"
+      
+      - name: Run Backfill
+        run: |
+          # Construct URL
+          URL="${{ vars.SCRAPER_URL }}"
+          
+          if [[ -z "$URL" ]]; then
+            echo "❌ ERROR: SCRAPER_URL variable is not set!"
+            exit 1
+          fi
+          
+          # Normalize URL
+          URL=$(echo "$URL" | xargs | sed 's|/$||')
+          
+          # Extract domain and construct base URL
+          if [[ "$URL" =~ ^https?:// ]]; then
+            DOMAIN=$(echo "$URL" | sed -E 's|^https?://||' | cut -d'/' -f1)
+            BASE_URL=$(echo "$URL" | sed -E 's|^(https?://[^/]+).*|\1|')
+          else
+            DOMAIN=$(echo "$URL" | cut -d'/' -f1)
+            BASE_URL="https://${DOMAIN}"
+          fi
+          
+          FULL_URL="${BASE_URL}/api/cron/backfill-company-tags"
+          
+          echo "✅ Full URL: ${FULL_URL}"
+          
+          # Make the request
+          echo "📡 Calling backfill endpoint..."
+          
+          set +e
+          response=$(curl --location-trusted -X POST \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            -H "Content-Type: application/json" \
+            -w "\nHTTP_CODE:%{http_code}" \
+            --connect-timeout 10 \
+            --max-time 300 \
+            -v \
+            "${FULL_URL}" 2>&1)
+          CURL_EXIT=$?
+          set -e
+          
+          if [ $CURL_EXIT -ne 0 ]; then
+            echo "❌ curl failed with exit code: $CURL_EXIT"
+            echo "Full curl output:"
+            echo "$response"
+            exit 1
+          fi
+          
+          # Extract HTTP code and body
+          http_code=$(echo "$response" | grep -o "HTTP_CODE:[0-9]*" | cut -d: -f2 || echo "000")
+          body=$(echo "$response" | grep -v "^<" | grep -v "^>" | grep -v "HTTP_CODE:" | tail -n +1)
+          
+          echo ""
+          echo "=== Response Summary ==="
+          echo "HTTP Code: ${http_code}"
+          echo "Response Body:"
+          echo "$body"
+          echo "========================"
+          
+          # Check if request was successful
+          if [ "$http_code" -ge 200 ] && [ "$http_code" -lt 300 ]; then
+            echo "✅ Backfill completed successfully (HTTP $http_code)"
+            echo ""
+            echo "$body" | jq '.' 2>/dev/null || echo "$body"
+          else
+            echo "❌ Backfill failed with HTTP $http_code"
+            echo "Full response:"
+            echo "$response"
+            exit 1
+          fi
+
