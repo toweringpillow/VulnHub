@@ -96,6 +96,11 @@ VIRUSTOTAL_API_KEY=your-key
 # News API (optional - for World News ticker)
 NEWS_API_KEY=your-key
 
+# Reddit API (optional - for Trending Banner)
+# If not set, will use public Reddit API (may be rate-limited)
+REDDIT_CLIENT_ID=your-reddit-client-id
+REDDIT_CLIENT_SECRET=your-reddit-client-secret
+
 # Security
 CRON_SECRET=your-random-string
 
@@ -126,6 +131,42 @@ The World News ticker feature uses [NewsAPI.org](https://newsapi.org/) to fetch 
    - If `NEWS_API_KEY` is not set, the world news feature will be disabled (no errors, just empty)
 
 **Note**: The free tier is sufficient for personal use. If you need more requests, NewsAPI offers paid plans starting at $449/month.
+
+### Getting Reddit API Credentials (Optional but Recommended)
+
+The Trending Banner feature uses Reddit to fetch trending cybersecurity keywords. While the public Reddit API works without credentials, it can be rate-limited. For better reliability, you can set up Reddit OAuth2:
+
+1. **Create a Reddit app**:
+   - Visit [https://www.reddit.com/prefs/apps](https://www.reddit.com/prefs/apps)
+   - Scroll down and click **"create another app..."** or **"create app"**
+   - Fill in the form:
+     - **Name**: VulnHub (or any name you prefer)
+     - **Type**: Select **"script"**
+     - **Description**: "Cybersecurity news aggregator trending keywords"
+     - **About URL**: Your site URL (optional)
+     - **Redirect URI**: `http://localhost:3000` (required but not used for script apps)
+   - Click **"create app"**
+
+2. **Get your credentials**:
+   - After creating the app, you'll see:
+     - **Client ID**: The string under your app name (looks like: `abc123def456ghi789`)
+     - **Client Secret**: The "secret" field (looks like: `xyz789secret123key456`)
+
+3. **Add to environment variables**:
+   - Add to `.env.local`:
+     ```env
+     REDDIT_CLIENT_ID=your-client-id-here
+     REDDIT_CLIENT_SECRET=your-client-secret-here
+     ```
+   - For production (Vercel), add both in: Project Settings → Environment Variables
+
+4. **How it works**:
+   - If credentials are provided, the app uses Reddit's OAuth2 API (better rate limits)
+   - If not provided, it falls back to the public Reddit JSON API (may be rate-limited)
+   - The trending banner fetches from cybersecurity subreddits every 5 minutes
+   - Keywords are extracted and weighted by post score and engagement
+
+**Note**: Reddit API credentials are optional. The feature will work without them, but may be more reliable with OAuth2 authentication.
 
 ## 🏗️ Project Structure
 

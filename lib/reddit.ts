@@ -18,6 +18,66 @@ interface RedditResponse {
   }
 }
 
+interface RedditTokenResponse {
+  access_token: string
+  token_type: string
+  expires_in: number
+  scope: string
+}
+
+// Cache for Reddit OAuth token
+let cachedToken: { token: string; expiresAt: number } | null = null
+
+/**
+ * Get Reddit OAuth2 access token (if credentials are configured)
+ */
+async function getRedditAccessToken(): Promise<string | null> {
+  const clientId = process.env.REDDIT_CLIENT_ID
+  const clientSecret = process.env.REDDIT_CLIENT_SECRET
+
+  // If no credentials, return null to use public API
+  if (!clientId || !clientSecret) {
+    return null
+  }
+
+  // Return cached token if still valid (with 5 minute buffer)
+  if (cachedToken && cachedToken.expiresAt > Date.now() + 5 * 60 * 1000) {
+    return cachedToken.token
+  }
+
+  try {
+    // Get OAuth2 token using client credentials flow
+    const authString = Buffer.from(`${clientId}:${clientSecret}`).toString('base64')
+    const response = await fetch('https://www.reddit.com/api/v1/access_token', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Basic ${authString}`,
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'User-Agent': 'VulnHub/1.0 (Cybersecurity News Aggregator)',
+      },
+      body: 'grant_type=client_credentials',
+    })
+
+    if (!response.ok) {
+      console.error('Failed to get Reddit OAuth token:', response.status, response.statusText)
+      return null
+    }
+
+    const data: RedditTokenResponse = await response.json()
+    
+    // Cache the token
+    cachedToken = {
+      token: data.access_token,
+      expiresAt: Date.now() + (data.expires_in * 1000),
+    }
+
+    return data.access_token
+  } catch (error) {
+    console.error('Error getting Reddit OAuth token:', error)
+    return null
+  }
+}
+
 // Cybersecurity-related subreddits to monitor
 export const CYBERSECURITY_SUBREDDITS = [
   'cybersecurity',
@@ -86,15 +146,26 @@ async function fetchSubredditPosts(
   try {
     const url = `https://www.reddit.com/r/${subreddit}/hot.json?limit=${limit}`
     
+    // Try to get OAuth token (falls back to null if not configured)
+    const accessToken = await getRedditAccessToken()
+    
+    // Build headers
+    const headers: HeadersInit = {
+      'User-Agent': 'VulnHub/1.0 (Cybersecurity News Aggregator)',
+      'Accept': 'application/json',
+    }
+    
+    // Add OAuth token if available
+    if (accessToken) {
+      headers['Authorization'] = `Bearer ${accessToken}`
+    }
+    
     // Add timeout to prevent hanging
     const controller = new AbortController()
     const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
     
     const response = await fetch(url, {
-      headers: {
-        'User-Agent': 'VulnHub/1.0 (Cybersecurity News Aggregator)',
-        'Accept': 'application/json',
-      },
+      headers,
       signal: controller.signal,
       next: { revalidate: 300 }, // Cache for 5 minutes
     })
