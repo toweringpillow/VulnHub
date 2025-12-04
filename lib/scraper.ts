@@ -12,6 +12,7 @@ import {
   SPONSORED_KEYWORDS,
 } from './constants'
 import { ScrapeResult } from '@/types'
+import { Database } from '@/types/database'
 
 const parser = new Parser({
   customFields: {
@@ -522,9 +523,12 @@ export async function scrapeArticles(): Promise<ScrapeResult> {
             
             // Create tag if it doesn't exist
             if (!tagId) {
+              const tagInsert: Database['public']['Tables']['tags']['Insert'] = {
+                name: companyName,
+              }
               const { data: newTag, error: tagError } = await supabaseAdmin
                 .from('tags')
-                .insert({ name: companyName })
+                .insert(tagInsert)
                 .select('id')
                 .single()
               
