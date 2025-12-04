@@ -25,7 +25,13 @@ export default function TrendingBanner() {
         if (response.ok) {
           const data = await response.json()
           console.log('Trending data:', data)
-          setTrending(data.data || [])
+          console.log('Trending array length:', data.data?.length || 0)
+          console.log('Trending items:', data.data)
+          const trendingArray = data.data || []
+          setTrending(trendingArray)
+          if (trendingArray.length === 0) {
+            console.warn('No trending keywords found - Reddit may not have returned matching keywords')
+          }
           setError(null)
         } else {
           const errorText = await response.text()
@@ -67,8 +73,11 @@ export default function TrendingBanner() {
 
   // Don't show if no trending topics
   if (trending.length === 0) {
+    console.log('TrendingBanner: No trending keywords to display')
     return null
   }
+
+  console.log(`TrendingBanner: Rendering ${trending.length} trending keywords`)
 
   return (
     <div className="bg-dark-800/50 border-y border-dark-700">
