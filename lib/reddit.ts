@@ -137,62 +137,92 @@ export const CYBERSECURITY_KEYWORDS = [
 ]
 
 /**
- * Fetch hot posts from a subreddit
+ * Fetch hot posts from a subreddit with retry logic
  */
 async function fetchSubredditPosts(
   subreddit: string,
-  limit: number = 25
+  limit: number = 25,
+  retries: number = 2
 ): Promise<RedditPost[]> {
-  try {
-    const url = `https://www.reddit.com/r/${subreddit}/hot.json?limit=${limit}`
-    
-    // Try to get OAuth token (falls back to null if not configured)
-    const accessToken = await getRedditAccessToken()
-    
-    // Build headers
-    const headers: HeadersInit = {
-      'User-Agent': 'VulnHub/1.0 (Cybersecurity News Aggregator)',
-      'Accept': 'application/json',
-    }
-    
-    // Add OAuth token if available
-    if (accessToken) {
-      headers['Authorization'] = `Bearer ${accessToken}`
-    }
-    
-    // Add timeout to prevent hanging
-    const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
-    
-    const response = await fetch(url, {
-      headers,
-      signal: controller.signal,
-      next: { revalidate: 300 }, // Cache for 5 minutes
-    })
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      const url = `https://www.reddit.com/r/${subreddit}/hot.json?limit=${limit}`
+      
+      // Try to get OAuth token (falls back to null if not configured)
+      const accessToken = await getRedditAccessToken()
+      
+      // Build headers
+      const headers: HeadersInit = {
+        'User-Agent': 'VulnHub/1.0 (Cybersecurity News Aggregator)',
+        'Accept': 'application/json',
+      }
+      
+      // Add OAuth token if available
+      if (accessToken) {
+        headers['Authorization'] = `Bearer ${accessToken}`
+      }
+      
+      // Add timeout to prevent hanging
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
+      
+      const response = await fetch(url, {
+        headers,
+        signal: controller.signal,
+        next: { revalidate: 300 }, // Cache for 5 minutes
+      })
 
-    clearTimeout(timeoutId)
+      clearTimeout(timeoutId)
 
-    if (!response.ok) {
-      console.error(`Failed to fetch from r/${subreddit}: ${response.status} ${response.statusText}`)
+      // Handle rate limiting (429) with retry
+      if (response.status === 429) {
+        if (attempt < retries) {
+          const retryAfter = parseInt(response.headers.get('retry-after') || '5')
+          console.warn(`Rate limited on r/${subreddit}, retrying after ${retryAfter}s (attempt ${attempt + 1}/${retries})`)
+          await new Promise(resolve => setTimeout(resolve, retryAfter * 1000))
+          continue
+        } else {
+          console.error(`Rate limited on r/${subreddit} after ${retries} retries`)
+          return []
+        }
+      }
+
+      if (!response.ok) {
+        console.error(`Failed to fetch from r/${subreddit}: ${response.status} ${response.statusText}`)
+        if (attempt < retries && response.status >= 500) {
+          // Retry on server errors
+          await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)))
+          continue
+        }
+        return []
+      }
+
+      const data: RedditResponse = await response.json()
+      
+      if (!data?.data?.children) {
+        console.warn(`Invalid response from r/${subreddit}`)
+        return []
+      }
+      
+      return data.data.children.map((child) => child.data)
+    } catch (error) {
+      if (error instanceof Error && error.name === 'AbortError') {
+        console.error(`Timeout fetching r/${subreddit}`)
+        if (attempt < retries) {
+          await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)))
+          continue
+        }
+      } else {
+        console.error(`Error fetching r/${subreddit} (attempt ${attempt + 1}/${retries + 1}):`, error)
+        if (attempt < retries) {
+          await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)))
+          continue
+        }
+      }
       return []
     }
-
-    const data: RedditResponse = await response.json()
-    
-    if (!data?.data?.children) {
-      console.warn(`Invalid response from r/${subreddit}`)
-      return []
-    }
-    
-    return data.data.children.map((child) => child.data)
-  } catch (error) {
-    if (error instanceof Error && error.name === 'AbortError') {
-      console.error(`Timeout fetching r/${subreddit}`)
-    } else {
-      console.error(`Error fetching r/${subreddit}:`, error)
-    }
-    return []
   }
+  return []
 }
 
 /**
