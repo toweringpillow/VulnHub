@@ -5,10 +5,11 @@ import Header from '@/components/Header'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import { formatDate, formatAIField, slugify } from '@/lib/utils'
-import { Clock, ExternalLink, AlertTriangle, ArrowLeft } from 'lucide-react'
+import { Clock, ExternalLink, AlertTriangle, ArrowLeft, FileText, Newspaper } from 'lucide-react'
 import { Metadata } from 'next'
 import { SITE_NAME, SITE_URL } from '@/lib/constants'
 import StructuredData from '@/components/StructuredData'
+import { findRelatedArticles, getArticleSourceStats } from '@/lib/articles'
 
 interface PageProps {
   params: { id: string; slug: string }
@@ -82,6 +83,17 @@ export default async function ArticleDetailPage({ params }: PageProps) {
   }
 
   const tags = article.article_tags?.map((at: any) => at.tags) || []
+  
+  // Get related articles and source stats
+  const relatedArticles = await findRelatedArticles(
+    article.id,
+    article.title,
+    article.ai_summary,
+    tags,
+    6
+  )
+  
+  const sourceStats = await getArticleSourceStats(article.title, tags)
   
   // Structured data for SEO
   const structuredData = {
@@ -171,6 +183,37 @@ export default async function ArticleDetailPage({ params }: PageProps) {
               )}
             </div>
 
+            {/* Source Stats */}
+            {sourceStats.totalSources > 1 && (
+              <div className="flex items-center gap-4 p-4 bg-primary-500/10 border border-primary-500/30 rounded-lg mb-6">
+                <div className="flex items-center gap-2">
+                  <Newspaper className="w-5 h-5 text-primary-400" />
+                  <div>
+                    <div className="text-lg font-bold text-gray-100">
+                      {sourceStats.totalSources} {sourceStats.totalSources === 1 ? 'Source' : 'Sources'}
+                    </div>
+                    <div className="text-xs text-gray-400">
+                      Reporting on this topic
+                    </div>
+                  </div>
+                </div>
+                {sourceStats.sources.length > 0 && (
+                  <div className="flex-1 flex flex-wrap gap-1 text-xs text-gray-400">
+                    {sourceStats.sources.slice(0, 5).map((source, i) => (
+                      <span key={i} className="px-2 py-1 bg-dark-700 rounded">
+                        {source}
+                      </span>
+                    ))}
+                    {sourceStats.sources.length > 5 && (
+                      <span className="px-2 py-1 text-gray-500">
+                        +{sourceStats.sources.length - 5} more
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Tags */}
             {tags.length > 0 && (
               <div className="flex flex-wrap gap-2 mb-6">
@@ -186,17 +229,30 @@ export default async function ArticleDetailPage({ params }: PageProps) {
               </div>
             )}
 
-            {/* AI Summary */}
+            {/* AI Summary - More prominent */}
             {article.ai_summary ? (
               <div className="space-y-6">
-                <div>
-                  <h2 className="text-xl font-semibold text-gray-100 mb-3">
+                <div className="border-l-4 border-primary-500 pl-6 py-2">
+                  <h2 className="text-2xl font-semibold text-gray-100 mb-4 flex items-center gap-2">
+                    <FileText className="w-6 h-6 text-primary-400" />
                     Summary
                   </h2>
-                  <p className="text-gray-200 text-lg leading-relaxed">
+                  <p className="text-gray-100 text-lg leading-relaxed">
                     {article.ai_summary}
                   </p>
                 </div>
+
+                {/* Original Summary if different */}
+                {article.original_summary && article.original_summary !== article.ai_summary && (
+                  <div className="p-4 bg-dark-700/50 rounded-lg border border-dark-600">
+                    <h3 className="text-sm font-semibold text-gray-400 mb-2">
+                      Original Article Summary
+                    </h3>
+                    <p className="text-gray-300 text-sm leading-relaxed">
+                      {article.original_summary}
+                    </p>
+                  </div>
+                )}
 
                 {/* Detailed Information */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -265,6 +321,39 @@ export default async function ArticleDetailPage({ params }: PageProps) {
               </a>
             </div>
           </article>
+
+          {/* Related Articles */}
+          {relatedArticles.length > 0 && (
+            <div className="mt-8">
+              <h2 className="text-2xl font-bold text-gray-100 mb-4">
+                Related Coverage
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {relatedArticles.map((related: any) => (
+                  <Link
+                    key={related.id}
+                    href={`/article/${related.id}/${slugify(related.title)}`}
+                    className="threat-card hover:ring-2 hover:ring-primary-500/50 transition-all"
+                  >
+                    <h3 className="text-lg font-semibold text-gray-100 mb-2 line-clamp-2">
+                      {related.title}
+                    </h3>
+                    {related.source && (
+                      <p className="text-sm text-gray-400 mb-2">{related.source}</p>
+                    )}
+                    {related.ai_summary && (
+                      <p className="text-sm text-gray-300 line-clamp-2">
+                        {related.ai_summary}
+                      </p>
+                    )}
+                    <div className="text-xs text-gray-500 mt-2">
+                      {formatDate(related.published_date, { month: 'short', day: 'numeric', year: 'numeric' })}
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </main>
 

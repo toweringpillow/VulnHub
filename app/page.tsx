@@ -7,6 +7,7 @@ import SearchBar from '@/components/SearchBar'
 import ArticleCard from '@/components/ArticleCard'
 import WorldNewsSidebar from '@/components/WorldNewsSidebar'
 import PageRefreshHandler from '@/components/PageRefreshHandler'
+import TrendingBanner from '@/components/TrendingBanner'
 import { DEFAULT_PAGE_SIZE } from '@/lib/constants'
 
 export const dynamic = 'force-dynamic'
@@ -88,6 +89,7 @@ export default async function HomePage({
       </Suspense>
       <Header />
       <Navbar />
+      <TrendingBanner />
       
       <main className="flex-1 container mx-auto px-4 py-8">
         <SearchBar />
