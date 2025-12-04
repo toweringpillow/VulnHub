@@ -523,17 +523,14 @@ export async function scrapeArticles(): Promise<ScrapeResult> {
             
             // Create tag if it doesn't exist
             if (!tagId) {
-              const tagInsert: Database['public']['Tables']['tags']['Insert'] = {
-                name: companyName,
-              }
               const { data: newTag, error: tagError } = await supabaseAdmin
                 .from('tags')
-                .insert(tagInsert)
+                .insert({ name: companyName } as any)
                 .select('id')
                 .single()
               
               if (!tagError && newTag) {
-                tagId = newTag.id
+                tagId = (newTag as any).id
                 // Update tagMap for future use in this run
                 tagMap.set(companyName.toLowerCase(), tagId)
               }
