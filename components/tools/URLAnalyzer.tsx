@@ -118,7 +118,7 @@ export default function URLAnalyzer() {
             <h3 className="text-lg font-semibold text-gray-100 mb-4">URL Analysis</h3>
             <div className="space-y-3">
               {Object.entries(result).map(([key, value]: [string, any]) => {
-                if (key === 'reputation') return null
+                if (key === 'reputation' || key === 'note' || key === 'message') return null
                 return (
                   <div key={key} className="flex flex-col sm:flex-row sm:items-start sm:justify-between py-2 border-b border-dark-600 last:border-0">
                     <span className="text-sm font-medium text-gray-400 mb-1 sm:mb-0 sm:w-1/3 capitalize">

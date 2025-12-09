@@ -69,8 +69,7 @@ export async function GET(request: NextRequest) {
         result.message = 'VirusTotal API error'
       }
     } else {
-      result.message = 'VirusTotal API key not configured. Add VIRUSTOTAL_API_KEY to enable hash lookup.'
-      result.note = 'Get a free API key at https://www.virustotal.com/gui/join-us'
+      result.status = 'unknown'
     }
 
     return NextResponse.json(result)

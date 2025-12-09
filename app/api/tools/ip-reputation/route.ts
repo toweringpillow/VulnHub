@@ -73,7 +73,6 @@ export async function GET(request: NextRequest) {
       }
     } else {
       results.reputation = 'unknown'
-      results.note = 'VirusTotal API key not configured. Add VIRUSTOTAL_API_KEY for reputation checking.'
     }
 
     return NextResponse.json(results)

@@ -27,15 +27,14 @@ export async function GET(request: NextRequest) {
           domain: data.domain || domain,
           registrar: data.isp || 'Unknown',
           creation_date: data.timezone || 'Unknown',
-          expiration_date: 'N/A (Free API limitation)',
-          updated_date: 'N/A (Free API limitation)',
+          expiration_date: 'N/A',
+          updated_date: 'N/A',
           nameservers: data.org || 'Unknown',
-          registrant: 'N/A (Free API limitation)',
+          registrant: 'N/A',
           country: data.country || 'Unknown',
           city: data.city || 'Unknown',
           region: data.region || 'Unknown',
           timezone: data.timezone || 'Unknown',
-          note: 'Limited information available from free API. For full WHOIS data, consider using a paid service.',
         })
       }
     } catch (error) {
@@ -45,8 +44,16 @@ export async function GET(request: NextRequest) {
     // Fallback: Return basic structure
     return NextResponse.json({
       domain,
-      message: 'WHOIS lookup requires API integration',
-      note: 'To enable full WHOIS functionality, integrate with a WHOIS API service',
+      registrar: 'Unknown',
+      creation_date: 'Unknown',
+      expiration_date: 'Unknown',
+      updated_date: 'Unknown',
+      nameservers: 'Unknown',
+      registrant: 'Unknown',
+      country: 'Unknown',
+      city: 'Unknown',
+      region: 'Unknown',
+      timezone: 'Unknown',
     })
   } catch (error) {
     console.error('WHOIS lookup error:', error)

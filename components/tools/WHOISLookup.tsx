@@ -90,16 +90,20 @@ export default function WHOISLookup() {
         <div className="mt-6 p-4 bg-dark-700 rounded-lg">
           <h3 className="text-lg font-semibold text-gray-100 mb-4">WHOIS Information</h3>
           <div className="space-y-3">
-            {Object.entries(result).map(([key, value]: [string, any]) => (
-              <div key={key} className="flex flex-col sm:flex-row sm:items-start sm:justify-between py-2 border-b border-dark-600 last:border-0">
-                <span className="text-sm font-medium text-gray-400 mb-1 sm:mb-0 sm:w-1/3 capitalize">
-                  {key.replace(/_/g, ' ')}
-                </span>
-                <span className="text-sm text-gray-200 font-mono break-all sm:w-2/3">
-                  {Array.isArray(value) ? value.join(', ') : String(value || 'N/A')}
-                </span>
-              </div>
-            ))}
+            {Object.entries(result).map(([key, value]: [string, any]) => {
+              // Filter out note and message fields
+              if (key === 'note' || key === 'message') return null
+              return (
+                <div key={key} className="flex flex-col sm:flex-row sm:items-start sm:justify-between py-2 border-b border-dark-600 last:border-0">
+                  <span className="text-sm font-medium text-gray-400 mb-1 sm:mb-0 sm:w-1/3 capitalize">
+                    {key.replace(/_/g, ' ')}
+                  </span>
+                  <span className="text-sm text-gray-200 font-mono break-all sm:w-2/3">
+                    {Array.isArray(value) ? value.join(', ') : String(value || 'N/A')}
+                  </span>
+                </div>
+              )
+            })}
           </div>
         </div>
       )}

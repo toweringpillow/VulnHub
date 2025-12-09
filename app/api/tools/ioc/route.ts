@@ -26,10 +26,7 @@ export async function GET(request: NextRequest) {
       status: 'unknown',
       type,
       value,
-      details: {
-        message: 'IOC lookup functionality requires API integration',
-        note: 'To enable this feature, add VIRUSTOTAL_API_KEY to environment variables',
-      }
+      details: {}
     }
 
     // If VirusTotal API key is available, use it
