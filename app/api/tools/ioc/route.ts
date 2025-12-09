@@ -17,7 +17,12 @@ export async function GET(request: NextRequest) {
     // In production, integrate with VirusTotal API (free tier: 4 requests/minute)
     // or other threat intelligence APIs
     
-    const result = {
+    const result: {
+      status: string
+      type: string
+      value: string
+      details: Record<string, unknown>
+    } = {
       status: 'unknown',
       type,
       value,
