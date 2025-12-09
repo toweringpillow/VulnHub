@@ -43,7 +43,7 @@ export default function Navbar() {
   const navItems = [
     { href: '/', label: 'Home', icon: Home },
     { href: '/search', label: 'Search', icon: Search },
-    { href: '/iocs', label: 'IOC Lookup', icon: ShieldAlert },
+    { href: '/tools', label: 'Tools', icon: ShieldAlert },
   ]
 
   const isActive = (href: string) => pathname === href

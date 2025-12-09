@@ -36,8 +36,8 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/iocs" className="text-gray-400 hover:text-primary-500 transition-colors">
-                  IOC Lookup
+                <Link href="/tools" className="text-gray-400 hover:text-primary-500 transition-colors">
+                  Tools
                 </Link>
               </li>
               <li>
