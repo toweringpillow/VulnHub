@@ -29,7 +29,7 @@ export default function TermsPage() {
             <section>
               <h2 className="text-2xl font-bold text-gray-100 mb-4">Agreement to Terms</h2>
               <p>
-                By accessing or using {SITE_NAME} ("the Service"), you agree to be bound by these Terms 
+                By accessing or using {SITE_NAME} (&quot;the Service&quot;), you agree to be bound by these Terms 
                 of Service. If you disagree with any part of these terms, you may not access the Service.
               </p>
             </section>
@@ -46,7 +46,7 @@ export default function TermsPage() {
                 <li>Use the materials for any commercial purpose or for any public display</li>
                 <li>Attempt to reverse engineer any software contained on the website</li>
                 <li>Remove any copyright or other proprietary notations from the materials</li>
-                <li>Transfer the materials to another person or "mirror" the materials on any other server</li>
+                <li>Transfer the materials to another person or &quot;mirror&quot; the materials on any other server</li>
               </ul>
             </section>
 
@@ -100,7 +100,7 @@ export default function TermsPage() {
             <section>
               <h2 className="text-2xl font-bold text-gray-100 mb-4">Disclaimer</h2>
               <p>
-                The information on {SITE_NAME} is provided on an "as is" basis. While we strive to provide 
+                The information on {SITE_NAME} is provided on an &quot;as is&quot; basis. While we strive to provide 
                 accurate and timely information, we make no representations or warranties of any kind, 
                 express or implied, about:
               </p>

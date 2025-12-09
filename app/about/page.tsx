@@ -2,7 +2,7 @@ import Header from '@/components/Header'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import { Metadata } from 'next'
-import { SITE_NAME, SITE_DESCRIPTION, SITE_URL } from '@/lib/constants'
+import { SITE_NAME, SITE_DESCRIPTION } from '@/lib/constants'
 import { Shield, Zap, Target, Users, TrendingUp, AlertTriangle } from 'lucide-react'
 
 export const metadata: Metadata = {
@@ -37,7 +37,7 @@ export default function AboutPage() {
               <p className="text-gray-300 leading-relaxed mb-4">
                 The cybersecurity landscape changes rapidly. New vulnerabilities are discovered daily, 
                 exploits are developed overnight, and attacks can spread globally in hours. Traditional 
-                news sources often lag behind, leaving organizations vulnerable to threats they don't 
+                news sources often lag behind, leaving organizations vulnerable to threats they don&apos;t 
                 know exist.
               </p>
               <p className="text-gray-300 leading-relaxed mb-4">
@@ -48,7 +48,7 @@ export default function AboutPage() {
                 guidance—all within minutes of publication.
               </p>
               <p className="text-gray-300 leading-relaxed">
-                Whether you're a security analyst tracking emerging threats, an IT administrator 
+                Whether you&apos;re a security analyst tracking emerging threats, an IT administrator 
                 protecting your organization, or a developer securing your applications, VulnHub 
                 gives you the information you need to stay ahead of attackers.
               </p>
@@ -94,7 +94,7 @@ export default function AboutPage() {
                   </h3>
                   <p className="text-gray-300 leading-relaxed">
                     New threats appear on VulnHub within minutes of being reported. Our real-time 
-                    update system ensures you're immediately notified of critical vulnerabilities, 
+                    update system ensures you&apos;re immediately notified of critical vulnerabilities, 
                     especially those being actively exploited. No need to refresh the page—new 
                     articles appear automatically.
                   </p>
@@ -173,7 +173,7 @@ export default function AboutPage() {
               </ul>
               <p className="text-gray-300 leading-relaxed">
                 All articles link back to their original sources, allowing you to read the full 
-                reports and verify information. We don't modify or editorialize source content—we 
+                reports and verify information. We don&apos;t modify or editorialize source content—we 
                 aggregate, analyze, and organize it for faster access.
               </p>
             </section>
@@ -198,7 +198,7 @@ export default function AboutPage() {
             <section className="mb-12 bg-dark-800 border border-dark-700 rounded-lg p-6">
               <h2 className="text-3xl font-bold text-gray-100 mb-6">Contact</h2>
               <p className="text-gray-300 leading-relaxed mb-4">
-                Have a question, suggestion, or want to report an issue? We'd love to hear from you.
+                Have a question, suggestion, or want to report an issue? We&apos;d love to hear from you.
               </p>
               <p className="text-gray-300">
                 Email: <a href="mailto:support@vulnerabilityhub.com" className="text-primary-400 hover:text-primary-300">support@vulnerabilityhub.com</a>

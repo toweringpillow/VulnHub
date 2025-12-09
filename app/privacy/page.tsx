@@ -29,7 +29,7 @@ export default function PrivacyPage() {
             <section>
               <h2 className="text-2xl font-bold text-gray-100 mb-4">Introduction</h2>
               <p>
-                {SITE_NAME} ("we", "our", or "us") is committed to protecting your privacy. This Privacy Policy 
+                {SITE_NAME} (&quot;we&quot;, &quot;our&quot;, or &quot;us&quot;) is committed to protecting your privacy. This Privacy Policy 
                 explains how we collect, use, disclose, and safeguard your information when you visit our website 
                 and use our services.
               </p>
@@ -88,7 +88,7 @@ export default function PrivacyPage() {
               <p>
                 We use Google AdSense to display advertisements. Google may use cookies and similar 
                 technologies to serve personalized ads based on your browsing history. You can opt out 
-                of personalized advertising by visiting Google's Ad Settings.
+                of personalized advertising by visiting Google&apos;s Ad Settings.
               </p>
 
               <h3 className="text-xl font-semibold text-gray-100 mb-3 mt-6">Authentication</h3>
@@ -139,7 +139,7 @@ export default function PrivacyPage() {
             </section>
 
             <section>
-              <h2 className="text-2xl font-bold text-gray-100 mb-4">Children's Privacy</h2>
+              <h2 className="text-2xl font-bold text-gray-100 mb-4">Children&apos;s Privacy</h2>
               <p>
                 Our service is not intended for children under the age of 13. We do not knowingly collect 
                 personal information from children under 13. If you are a parent or guardian and believe 
@@ -151,7 +151,7 @@ export default function PrivacyPage() {
               <h2 className="text-2xl font-bold text-gray-100 mb-4">Changes to This Privacy Policy</h2>
               <p>
                 We may update our Privacy Policy from time to time. We will notify you of any changes by 
-                posting the new Privacy Policy on this page and updating the "Last updated" date. You are 
+                posting the new Privacy Policy on this page and updating the &quot;Last updated&quot; date. You are 
                 advised to review this Privacy Policy periodically for any changes.
               </p>
             </section>
