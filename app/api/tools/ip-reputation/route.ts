@@ -1,9 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { rateLimit, getClientIdentifier } from '@/lib/rate-limit'
 
 export async function GET(request: NextRequest) {
   try {
+    // Rate limiting
+    const clientId = getClientIdentifier(request)
+    const limit = rateLimit(`ip:${clientId}`, { maxRequests: 20, windowMs: 60000 })
+    
+    if (!limit.allowed) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { 
+          status: 429,
+          headers: {
+            'Retry-After': Math.ceil((limit.resetTime - Date.now()) / 1000).toString(),
+            'X-RateLimit-Limit': '20',
+            'X-RateLimit-Remaining': '0',
+            'X-RateLimit-Reset': new Date(limit.resetTime).toISOString(),
+          }
+        }
+      )
+    }
+
     const searchParams = request.nextUrl.searchParams
-    const ip = searchParams.get('ip')
+    const ip = searchParams.get('ip')?.trim()
 
     if (!ip) {
       return NextResponse.json(
@@ -12,9 +32,20 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Validate IP format
-    const ipRegex = /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/
-    if (!ipRegex.test(ip)) {
+    // Length limit
+    if (ip.length > 45) { // IPv6 can be up to 45 chars
+      return NextResponse.json(
+        { error: 'IP address too long' },
+        { status: 400 }
+      )
+    }
+
+    // Validate IP format (IPv4)
+    const ipv4Regex = /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/
+    // Basic IPv6 validation (simplified)
+    const ipv6Regex = /^([0-9a-fA-F]{0,4}:){2,7}[0-9a-fA-F]{0,4}$/
+    
+    if (!ipv4Regex.test(ip) && !ipv6Regex.test(ip)) {
       return NextResponse.json(
         { error: 'Invalid IP address format' },
         { status: 400 }
@@ -75,7 +106,16 @@ export async function GET(request: NextRequest) {
       results.reputation = 'unknown'
     }
 
-    return NextResponse.json(results)
+    return NextResponse.json(
+      results,
+      {
+        headers: {
+          'X-RateLimit-Limit': '20',
+          'X-RateLimit-Remaining': limit.remaining.toString(),
+          'X-RateLimit-Reset': new Date(limit.resetTime).toISOString(),
+        }
+      }
+    )
   } catch (error) {
     console.error('IP reputation lookup error:', error)
     return NextResponse.json(

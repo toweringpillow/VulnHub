@@ -5,7 +5,7 @@ import Header from '@/components/Header'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import { formatDate, formatAIField, slugify } from '@/lib/utils'
-import { Clock, ExternalLink, AlertTriangle, ArrowLeft, FileText, Newspaper } from 'lucide-react'
+import { Clock, ExternalLink, AlertTriangle, ArrowLeft, FileText, Newspaper, Home, KeyRound, Info, Shield } from 'lucide-react'
 import { Metadata } from 'next'
 import { SITE_NAME, SITE_URL } from '@/lib/constants'
 import StructuredData from '@/components/StructuredData'
@@ -133,14 +133,19 @@ export default async function ArticleDetailPage({ params }: PageProps) {
       
       <main className="flex-1 container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
-          {/* Back Link */}
-          <Link
-            href="/"
-            className="inline-flex items-center space-x-2 text-sm text-gray-400 hover:text-gray-100 transition-colors mb-6"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            <span>Back to all threats</span>
-          </Link>
+          {/* Breadcrumbs */}
+          <nav className="flex items-center space-x-2 text-sm text-gray-400 mb-6">
+            <Link href="/" className="hover:text-gray-100 transition-colors flex items-center gap-1">
+              <Home className="w-4 h-4" />
+              <span>Home</span>
+            </Link>
+            <span>/</span>
+            <Link href="/search" className="hover:text-gray-100 transition-colors">
+              Threats
+            </Link>
+            <span>/</span>
+            <span className="text-gray-500">Article</span>
+          </nav>
 
           {/* Article Header */}
           <article className="threat-card">
@@ -235,11 +240,45 @@ export default async function ArticleDetailPage({ params }: PageProps) {
                 <div className="border-l-4 border-primary-500 pl-6 py-2">
                   <h2 className="text-2xl font-semibold text-gray-100 mb-4 flex items-center gap-2">
                     <FileText className="w-6 h-6 text-primary-400" />
-                    Summary
+                    Overview
                   </h2>
-                  <p className="text-gray-100 text-lg leading-relaxed">
-                    {article.ai_summary}
-                  </p>
+                  <div className="text-gray-100 text-lg leading-relaxed space-y-4">
+                    <p>{article.ai_summary}</p>
+                  </div>
+                </div>
+
+                {/* Key Takeaways */}
+                <div className="bg-gradient-to-br from-primary-500/10 to-primary-500/5 border border-primary-500/30 rounded-lg p-6">
+                  <h3 className="text-xl font-semibold text-gray-100 mb-4 flex items-center gap-2">
+                    <KeyRound className="w-5 h-5 text-primary-400" />
+                    Key Takeaways
+                  </h3>
+                  <ul className="space-y-3 text-gray-200">
+                    {article.in_wild === 'Yes' && (
+                      <li className="flex items-start gap-3">
+                        <AlertTriangle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
+                        <span><strong>Active Exploitation:</strong> This vulnerability is being actively exploited by attackers. Immediate action is recommended.</span>
+                      </li>
+                    )}
+                    {article.impact && formatAIField(article.impact) !== 'Not specified' && (
+                      <li className="flex items-start gap-3">
+                        <Shield className="w-5 h-5 text-primary-400 flex-shrink-0 mt-0.5" />
+                        <span><strong>Affected Systems:</strong> {formatAIField(article.impact)}</span>
+                      </li>
+                    )}
+                    {article.remediation && formatAIField(article.remediation) !== 'Not specified' && (
+                      <li className="flex items-start gap-3">
+                        <Info className="w-5 h-5 text-primary-400 flex-shrink-0 mt-0.5" />
+                        <span><strong>Action Required:</strong> {formatAIField(article.remediation).split('.')[0]}.</span>
+                      </li>
+                    )}
+                    {article.age && (
+                      <li className="flex items-start gap-3">
+                        <Clock className="w-5 h-5 text-primary-400 flex-shrink-0 mt-0.5" />
+                        <span><strong>Timeline:</strong> {article.age}</span>
+                      </li>
+                    )}
+                  </ul>
                 </div>
 
                 {/* Original Summary if different */}
@@ -256,44 +295,76 @@ export default async function ArticleDetailPage({ params }: PageProps) {
 
                 {/* Detailed Information */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-100 mb-2">
+                  <div className="bg-dark-800 border border-dark-700 rounded-lg p-5">
+                    <h3 className="text-lg font-semibold text-gray-100 mb-3 flex items-center gap-2">
+                      <Shield className="w-5 h-5 text-primary-400" />
                       Impact
                     </h3>
-                    <p className="text-gray-300">
-                      {article.impact ? formatAIField(article.impact) : 'N/A'}
+                    <p className="text-gray-300 leading-relaxed">
+                      {article.impact ? formatAIField(article.impact) : 'Impact information is not available for this threat. Please refer to the original article for details.'}
                     </p>
                   </div>
 
                   {article.in_wild && (
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-100 mb-2">
-                        In the Wild
+                    <div className="bg-dark-800 border border-dark-700 rounded-lg p-5">
+                      <h3 className="text-lg font-semibold text-gray-100 mb-3 flex items-center gap-2">
+                        <AlertTriangle className="w-5 h-5 text-destructive" />
+                        Exploitation Status
                       </h3>
-                      <p className="text-gray-300">
-                        {article.in_wild}
+                      <p className="text-gray-300 leading-relaxed">
+                        {article.in_wild === 'Yes' 
+                          ? 'This vulnerability is confirmed to be actively exploited by attackers in real-world attacks. Organizations should prioritize patching or implementing workarounds immediately.'
+                          : article.in_wild === 'No'
+                          ? 'No active exploitation has been reported at this time. However, organizations should still apply patches promptly as proof-of-concept code may exist.'
+                          : 'The exploitation status is currently unknown. Monitor vendor advisories and security bulletins for updates.'}
                       </p>
                     </div>
                   )}
 
                   {article.age && (
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-100 mb-2">
+                    <div className="bg-dark-800 border border-dark-700 rounded-lg p-5">
+                      <h3 className="text-lg font-semibold text-gray-100 mb-3 flex items-center gap-2">
+                        <Clock className="w-5 h-5 text-primary-400" />
                         Timeline
                       </h3>
-                      <p className="text-gray-300">
+                      <p className="text-gray-300 leading-relaxed">
                         {article.age}
                       </p>
                     </div>
                   )}
 
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-100 mb-2">
+                  <div className="bg-dark-800 border border-dark-700 rounded-lg p-5">
+                    <h3 className="text-lg font-semibold text-gray-100 mb-3 flex items-center gap-2">
+                      <Info className="w-5 h-5 text-primary-400" />
                       Remediation
                     </h3>
-                    <p className="text-gray-300">
-                      {article.remediation ? formatAIField(article.remediation) : 'N/A'}
+                    <p className="text-gray-300 leading-relaxed">
+                      {article.remediation ? formatAIField(article.remediation) : 'Remediation steps are not available for this threat. Check the original article or vendor security advisories for patching information and mitigation strategies.'}
                     </p>
+                  </div>
+                </div>
+
+                {/* Additional Context */}
+                <div className="bg-dark-800/50 border border-dark-700 rounded-lg p-6 mt-6">
+                  <h3 className="text-lg font-semibold text-gray-100 mb-3">Additional Information</h3>
+                  <div className="space-y-3 text-sm text-gray-300">
+                    <p>
+                      This threat intelligence is aggregated from trusted cybersecurity sources. For the most 
+                      up-to-date information, technical details, and official vendor guidance, please refer to 
+                      the original article linked below.
+                    </p>
+                    {tags.length > 0 && (
+                      <p>
+                        <strong>Related Topics:</strong> This incident relates to {tags.slice(0, 3).map((t: any) => t.name).join(', ')}
+                        {tags.length > 3 && `, and ${tags.length - 3} more`}.
+                      </p>
+                    )}
+                    {sourceStats.totalSources > 1 && (
+                      <p>
+                        <strong>Multiple Sources:</strong> This threat is being reported by {sourceStats.totalSources} different 
+                        security sources, indicating significant concern within the cybersecurity community.
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>

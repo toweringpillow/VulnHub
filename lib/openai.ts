@@ -61,7 +61,7 @@ Then respond with: {"is_sponsored": true, "ai_summary": "This appears to be prom
 
 If this is a legitimate cybersecurity article about threats, vulnerabilities, breaches, or security incidents, analyze it and provide the following information in valid JSON format:
 - "is_sponsored": false
-- "ai_summary": A brief summary (2-3 sentences) focusing on the core issue, severity, and key implications.
+- "ai_summary": Write a comprehensive, natural-sounding summary (4-6 sentences, 150-250 words) that explains what happened, who is affected, and why it matters. Write in a clear, direct journalistic style. AVOID these overused phrases: "threat landscape", "delve", "unveil", "shed light", "navigate", "unprecedented", "critical juncture", "paradigm shift", "robust", "leverage", "holistic", "comprehensive analysis", "in the wake of", "underscores", "highlights the importance". Instead, use plain language: "attackers are", "affects", "researchers found", "companies should", "users need to". Be specific about what happened, include concrete details, and explain the real-world implications.
 - "impact": A string listing the main affected products, vendors, systems, or versions. Be specific and comprehensive. If none can be determined, value should be "Not specified".
 - "in_wild": A string indicating if the vulnerability is actively exploited. Answer only "Yes", "No", or "Unknown". Look for phrases like "actively exploited", "in the wild", "active exploitation", "zero-day exploit".
 - "age": A string describing the disclosure timeline (e.g., "Newly disclosed", "Disclosed on [date]", "Ongoing since [timeframe]").
@@ -70,9 +70,15 @@ If this is a legitimate cybersecurity article about threats, vulnerabilities, br
 
     const response = await openai.chat.completions.create({
       model: AI_MODEL,
-      messages: [{ role: 'user', content: prompt }],
-      temperature: 0.4,
-      max_tokens: 600,
+      messages: [
+        { 
+          role: 'system', 
+          content: 'You are a cybersecurity journalist writing clear, direct summaries of security incidents. Write in a natural, conversational style. Avoid corporate jargon and overused phrases. Be specific and factual.' 
+        },
+        { role: 'user', content: prompt }
+      ],
+      temperature: 0.6,
+      max_tokens: 800,
       response_format: { type: 'json_object' },
     })
 

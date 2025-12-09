@@ -12,8 +12,21 @@ export const revalidate = 300
 async function searchArticles(query: string, page: number = 1) {
   const supabase = createServerClient()
   
-  const start = (page - 1) * DEFAULT_PAGE_SIZE
+  // Input validation and sanitization
+  const sanitizedQuery = query.trim().slice(0, 200) // Max 200 characters
+  
+  if (!sanitizedQuery || sanitizedQuery.length < 2) {
+    return { articles: [], total: 0 }
+  }
+
+  // Validate page number
+  const validPage = Math.max(1, Math.min(page, 100)) // Max 100 pages
+  
+  const start = (validPage - 1) * DEFAULT_PAGE_SIZE
   const end = start + DEFAULT_PAGE_SIZE - 1
+
+  // Escape special characters for Supabase ilike (basic protection)
+  const escapedQuery = sanitizedQuery.replace(/[%_\\]/g, '\\$&')
 
   const { data, error, count } = await supabase
     .from('articles')
@@ -27,7 +40,7 @@ async function searchArticles(query: string, page: number = 1) {
         )
       )
     `, { count: 'exact' })
-    .or(`title.ilike.%${query}%,ai_summary.ilike.%${query}%,impact.ilike.%${query}%`)
+    .or(`title.ilike.%${escapedQuery}%,ai_summary.ilike.%${escapedQuery}%,impact.ilike.%${escapedQuery}%`)
     .order('published_date', { ascending: false })
     .range(start, end)
 

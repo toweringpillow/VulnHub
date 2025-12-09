@@ -12,14 +12,14 @@ export const dynamic = 'force-dynamic'
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
-    const page = Math.max(1, parseInt(searchParams.get('page') || '1'))
+    const page = Math.max(1, Math.min(100, parseInt(searchParams.get('page') || '1'))) // Max 100 pages
     const perPage = Math.min(
       MAX_PAGE_SIZE,
       Math.max(1, parseInt(searchParams.get('perPage') || String(DEFAULT_PAGE_SIZE)))
     )
-    const query = searchParams.get('q')
+    const query = searchParams.get('q')?.trim().slice(0, 200) // Max 200 chars
     const tagId = searchParams.get('tag')
-    const source = searchParams.get('source')
+    const source = searchParams.get('source')?.trim().slice(0, 100) // Max 100 chars
     const inWild = searchParams.get('inWild')
 
     const supabase = createServerClient()
@@ -40,8 +40,10 @@ export async function GET(request: Request) {
       .order('published_date', { ascending: false })
 
     // Apply filters
-    if (query) {
-      dbQuery = dbQuery.or(`title.ilike.%${query}%,ai_summary.ilike.%${query}%`)
+    if (query && query.length >= 2) { // Minimum 2 characters for search
+      // Escape special characters for Supabase ilike
+      const escapedQuery = query.replace(/[%_\\]/g, '\\$&')
+      dbQuery = dbQuery.or(`title.ilike.%${escapedQuery}%,ai_summary.ilike.%${escapedQuery}%`)
     }
 
     if (source) {
@@ -54,7 +56,8 @@ export async function GET(request: Request) {
 
     if (tagId) {
       const tagIdNum = parseInt(tagId)
-      if (!isNaN(tagIdNum)) {
+      // Validate tagId is a positive integer
+      if (!isNaN(tagIdNum) && tagIdNum > 0 && tagIdNum <= Number.MAX_SAFE_INTEGER) {
         dbQuery = dbQuery.contains('article_tags', [{ tag_id: tagIdNum }])
       }
     }

@@ -1,14 +1,53 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { rateLimit, getClientIdentifier } from '@/lib/rate-limit'
+
+const MAX_IOC_LENGTH = 1000
 
 export async function GET(request: NextRequest) {
   try {
+    // Rate limiting
+    const clientId = getClientIdentifier(request)
+    const limit = rateLimit(`ioc:${clientId}`, { maxRequests: 20, windowMs: 60000 })
+    
+    if (!limit.allowed) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { 
+          status: 429,
+          headers: {
+            'Retry-After': Math.ceil((limit.resetTime - Date.now()) / 1000).toString(),
+            'X-RateLimit-Limit': '20',
+            'X-RateLimit-Remaining': '0',
+            'X-RateLimit-Reset': new Date(limit.resetTime).toISOString(),
+          }
+        }
+      )
+    }
+
     const searchParams = request.nextUrl.searchParams
-    const value = searchParams.get('value')
-    const type = searchParams.get('type')
+    const value = searchParams.get('value')?.trim()
+    const type = searchParams.get('type')?.trim()
 
     if (!value || !type) {
       return NextResponse.json(
         { error: 'Missing value or type parameter' },
+        { status: 400 }
+      )
+    }
+
+    // Length validation
+    if (value.length > MAX_IOC_LENGTH) {
+      return NextResponse.json(
+        { error: `IOC value too long (max ${MAX_IOC_LENGTH} characters)` },
+        { status: 400 }
+      )
+    }
+
+    // Type validation
+    const validTypes = ['ip', 'domain', 'url', 'md5', 'sha1', 'sha256', 'cve']
+    if (!validTypes.includes(type.toLowerCase())) {
+      return NextResponse.json(
+        { error: `Invalid IOC type. Allowed: ${validTypes.join(', ')}` },
         { status: 400 }
       )
     }
@@ -82,7 +121,16 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    return NextResponse.json(result)
+    return NextResponse.json(
+      result,
+      {
+        headers: {
+          'X-RateLimit-Limit': '20',
+          'X-RateLimit-Remaining': limit.remaining.toString(),
+          'X-RateLimit-Reset': new Date(limit.resetTime).toISOString(),
+        }
+      }
+    )
   } catch (error) {
     console.error('IOC lookup error:', error)
     return NextResponse.json(

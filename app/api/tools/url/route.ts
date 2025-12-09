@@ -1,13 +1,46 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { rateLimit, getClientIdentifier } from '@/lib/rate-limit'
+
+// Blocked protocols for SSRF protection
+const BLOCKED_PROTOCOLS = ['file:', 'ftp:', 'gopher:', 'javascript:', 'data:', 'vbscript:']
+const BLOCKED_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0', '::1', '[::1]']
+const MAX_URL_LENGTH = 2048
 
 export async function GET(request: NextRequest) {
   try {
+    // Rate limiting
+    const clientId = getClientIdentifier(request)
+    const limit = rateLimit(`url:${clientId}`, { maxRequests: 15, windowMs: 60000 })
+    
+    if (!limit.allowed) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { 
+          status: 429,
+          headers: {
+            'Retry-After': Math.ceil((limit.resetTime - Date.now()) / 1000).toString(),
+            'X-RateLimit-Limit': '15',
+            'X-RateLimit-Remaining': '0',
+            'X-RateLimit-Reset': new Date(limit.resetTime).toISOString(),
+          }
+        }
+      )
+    }
+
     const searchParams = request.nextUrl.searchParams
-    const url = searchParams.get('url')
+    const url = searchParams.get('url')?.trim()
 
     if (!url) {
       return NextResponse.json(
         { error: 'Missing URL parameter' },
+        { status: 400 }
+      )
+    }
+
+    // Length limit
+    if (url.length > MAX_URL_LENGTH) {
+      return NextResponse.json(
+        { error: 'URL too long (max 2048 characters)' },
         { status: 400 }
       )
     }
@@ -19,6 +52,49 @@ export async function GET(request: NextRequest) {
     } catch {
       return NextResponse.json(
         { error: 'Invalid URL format' },
+        { status: 400 }
+      )
+    }
+
+    // SSRF Protection - Block dangerous protocols
+    if (BLOCKED_PROTOCOLS.includes(urlObj.protocol.toLowerCase())) {
+      return NextResponse.json(
+        { error: 'Protocol not allowed' },
+        { status: 400 }
+      )
+    }
+
+    // SSRF Protection - Block localhost/internal IPs
+    const hostname = urlObj.hostname.toLowerCase()
+    if (BLOCKED_HOSTS.includes(hostname) || 
+        hostname.startsWith('192.168.') ||
+        hostname.startsWith('10.') ||
+        hostname.startsWith('172.16.') ||
+        hostname.startsWith('172.17.') ||
+        hostname.startsWith('172.18.') ||
+        hostname.startsWith('172.19.') ||
+        hostname.startsWith('172.20.') ||
+        hostname.startsWith('172.21.') ||
+        hostname.startsWith('172.22.') ||
+        hostname.startsWith('172.23.') ||
+        hostname.startsWith('172.24.') ||
+        hostname.startsWith('172.25.') ||
+        hostname.startsWith('172.26.') ||
+        hostname.startsWith('172.27.') ||
+        hostname.startsWith('172.28.') ||
+        hostname.startsWith('172.29.') ||
+        hostname.startsWith('172.30.') ||
+        hostname.startsWith('172.31.')) {
+      return NextResponse.json(
+        { error: 'Internal IP addresses are not allowed' },
+        { status: 400 }
+      )
+    }
+
+    // Only allow http and https
+    if (!['http:', 'https:'].includes(urlObj.protocol)) {
+      return NextResponse.json(
+        { error: 'Only HTTP and HTTPS URLs are allowed' },
         { status: 400 }
       )
     }
@@ -87,7 +163,16 @@ export async function GET(request: NextRequest) {
       // Ignore DNS errors
     }
 
-    return NextResponse.json(result)
+    return NextResponse.json(
+      result,
+      {
+        headers: {
+          'X-RateLimit-Limit': '15',
+          'X-RateLimit-Remaining': limit.remaining.toString(),
+          'X-RateLimit-Reset': new Date(limit.resetTime).toISOString(),
+        }
+      }
+    )
   } catch (error) {
     console.error('URL analysis error:', error)
     return NextResponse.json(
