@@ -22,11 +22,6 @@ import {
   Wrench
 } from 'lucide-react'
 
-export const metadata: Metadata = {
-  title: `Cybersecurity Tools | ${SITE_NAME}`,
-  description: 'Free open-source cybersecurity tools including email header analyzer, IOC lookup, DNS lookup, WHOIS, IP reputation, hash lookup, and URL analyzer.',
-}
-
 const tools = [
   { id: 'email-header', label: 'Email Header Analyzer', icon: Mail, component: EmailHeaderAnalyzer },
   { id: 'ioc', label: 'IOC Lookup', icon: ShieldAlert, component: IOCLookup },
