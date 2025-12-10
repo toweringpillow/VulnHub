@@ -57,7 +57,7 @@ export async function POST(request: Request) {
         })
       }
 
-      articleIds = recentArticles.map(a => a.id)
+      articleIds = (recentArticles as Array<{ id: number }>).map(a => a.id)
     }
 
     if (articleIds.length === 0) {
