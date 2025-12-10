@@ -31,6 +31,17 @@ const nextConfig = {
             key: 'Server',
             value: 'Next.js' // Intentionally expose
           },
+          // Explicitly remove security headers by not including them
+        ],
+      },
+      {
+        source: '/api/test-insecure/:path*',
+        headers: [
+          // Intentionally NO security headers for API test environment
+          {
+            key: 'X-Powered-By',
+            value: 'Next.js'
+          },
         ],
       },
       {
