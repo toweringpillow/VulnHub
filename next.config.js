@@ -73,13 +73,17 @@ const nextConfig = {
           },
           {
             key: 'Permissions-Policy',
-            value: 'camera=(), microphone=(), geolocation=()'
+            value: 'camera=(), microphone=(), geolocation=(), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=()'
           },
           {
             key: 'Content-Security-Policy',
             value: [
               "default-src 'self'",
+              // Note: 'unsafe-inline' required for Google AdSense and some Next.js features
+              // 'unsafe-eval' required for AdSense dynamic ad loading
+              // This is a known limitation when using AdSense
               "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://pagead2.googlesyndication.com https://www.googletagmanager.com",
+              // 'unsafe-inline' required for CSS-in-JS and dynamic styles
               "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com",
               "img-src 'self' data: https: blob:",
               "font-src 'self' data: https://fonts.gstatic.com",
