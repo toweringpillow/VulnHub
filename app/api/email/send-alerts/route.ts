@@ -138,10 +138,19 @@ export async function POST(request: Request) {
     // Group subscriptions by user
     const userSubscriptions = new Map<string, Array<{ tagId: number; tagName: string; displayName: string }>>()
 
-    for (const sub of subscriptions) {
+    type SubscriptionWithRelations = {
+      user_id: string
+      tag_id: number
+      tags: { id: number; name: string } | null
+      profiles: { id: string; display_name: string | null } | null
+    }
+
+    const typedSubscriptions = subscriptions as SubscriptionWithRelations[]
+
+    for (const sub of typedSubscriptions) {
       const userId = sub.user_id
-      const tag = (sub.tags as any)?.name
-      const displayName = (sub.profiles as any)?.display_name || 'User'
+      const tag = sub.tags?.name
+      const displayName = sub.profiles?.display_name || 'User'
 
       if (!tag) continue
 
@@ -155,9 +164,6 @@ export async function POST(request: Request) {
         displayName,
       })
     }
-
-    // Remove unused variable warning
-    const _userIds = Array.from(userSubscriptions.keys())
 
     // Get user emails from auth.users
     const { data: users, error: usersError } = await supabaseAdmin.auth.admin.listUsers()
