@@ -156,8 +156,10 @@ export async function POST(request: Request) {
       })
     }
 
+    // Remove unused variable warning
+    const _userIds = Array.from(userSubscriptions.keys())
+
     // Get user emails from auth.users
-    const userIds = Array.from(userSubscriptions.keys())
     const { data: users, error: usersError } = await supabaseAdmin.auth.admin.listUsers()
 
     if (usersError) {
