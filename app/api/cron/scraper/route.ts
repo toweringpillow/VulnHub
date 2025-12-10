@@ -44,6 +44,21 @@ export async function POST(request: Request) {
         articlesSkipped: result.articlesSkipped,
       })
 
+      // Trigger email alerts if new articles were added
+      if (result.articlesAdded > 0 && result.newArticleIds && result.newArticleIds.length > 0) {
+        try {
+          const siteUrl = process.env.SITE_URL || process.env.NEXT_PUBLIC_SITE_URL || process.env.VERCEL_URL || 'http://localhost:3000'
+          const alertUrl = `${siteUrl}/api/email/send-alerts?secret=${cronSecret}&articleIds=${result.newArticleIds.join(',')}`
+          
+          // Call alert endpoint asynchronously (don't wait for it)
+          fetch(alertUrl, { method: 'POST' }).catch(err => {
+            console.error('Failed to trigger email alerts:', err)
+          })
+        } catch (alertError) {
+          console.error('Error triggering email alerts:', alertError)
+        }
+      }
+
       return NextResponse.json(
         {
           success: true,

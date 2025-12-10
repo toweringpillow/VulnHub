@@ -101,6 +101,11 @@ NEWS_API_KEY=your-key
 REDDIT_CLIENT_ID=your-reddit-client-id
 REDDIT_CLIENT_SECRET=your-reddit-client-secret
 
+# Resend Email Service (optional - for email notifications)
+# Get API key from https://resend.com
+RESEND_API_KEY=re_your_api_key_here
+RESEND_FROM_EMAIL=noreply@vulnerabilityhub.com
+
 # Security
 CRON_SECRET=your-random-string
 

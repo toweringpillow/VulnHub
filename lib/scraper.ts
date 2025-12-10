@@ -335,6 +335,7 @@ export async function scrapeArticles(): Promise<ScrapeResult> {
     articlesAdded: 0,
     articlesSkipped: 0,
     errors: [],
+    newArticleIds: [],
   }
 
   try {
@@ -597,10 +598,18 @@ export async function scrapeArticles(): Promise<ScrapeResult> {
             continue
           }
 
+          const articleId = (insertedArticle as any).id
+          
+          // Track new article ID for email alerts
+          if (!result.newArticleIds) {
+            result.newArticleIds = []
+          }
+          result.newArticleIds.push(articleId)
+
           // Insert article tags
           if (articleTags.length > 0) {
             const articleTagsData = articleTags.map((tagId: any) => ({
-              article_id: (insertedArticle as any).id,
+              article_id: articleId,
               tag_id: tagId,
             }))
 

@@ -1,0 +1,13 @@
+# Intentionally permissive robots.txt for test environment
+# This allows all crawlers to index the test environment
+
+User-agent: *
+Allow: /test-insecure
+Allow: /test-insecure/debug
+Allow: /test-insecure/env
+Allow: /test-insecure/headers
+Allow: /test-insecure/error
+
+# Intentionally missing Disallow rules
+# Intentionally missing Sitemap reference
+

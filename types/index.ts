@@ -40,6 +40,7 @@ export interface ScrapeResult {
   articlesAdded: number
   articlesSkipped: number
   errors: string[]
+  newArticleIds?: number[] // IDs of newly added articles (for email alerts)
 }
 
 // Search/filter types

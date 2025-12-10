@@ -18,7 +18,21 @@ const nextConfig = {
   },
   // Security headers
   async headers() {
-    return [
+    const headers = [
+      {
+        source: '/test-insecure/:path*',
+        headers: [
+          // Intentionally NO security headers for test environment
+          {
+            key: 'X-Powered-By',
+            value: 'Next.js' // Intentionally expose
+          },
+          {
+            key: 'Server',
+            value: 'Next.js' // Intentionally expose
+          },
+        ],
+      },
       {
         source: '/:path*',
         headers: [
@@ -70,6 +84,7 @@ const nextConfig = {
         ],
       },
     ]
+    return headers
   },
   // Redirect www to non-www (configure in production)
   async redirects() {

@@ -90,6 +90,11 @@ export default function PrivacyPage() {
                 technologies to serve personalized ads based on your browsing history. You can opt out 
                 of personalized advertising by visiting Google&apos;s Ad Settings.
               </p>
+              <p className="mt-3">
+                We comply with Google&apos;s EU User Consent Policy. If you are located in the European 
+                Economic Area (EEA), we will obtain your consent before using cookies for personalized 
+                advertising. You can manage your cookie preferences at any time.
+              </p>
 
               <h3 className="text-xl font-semibold text-gray-100 mb-3 mt-6">Authentication</h3>
               <p>

@@ -13,6 +13,7 @@
     "db:types": "supabase gen types typescript --project-id YOUR_PROJECT_ID > types/supabase.ts"
   },
   "dependencies": {
+    "@react-email/components": "^1.0.1",
     "@supabase/auth-helpers-nextjs": "^0.8.7",
     "@supabase/auth-ui-react": "^0.4.6",
     "@supabase/auth-ui-shared": "^0.1.8",
@@ -28,7 +29,9 @@
     "openai": "^4.20.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-email": "^5.0.6",
     "react-hot-toast": "^2.4.1",
+    "resend": "^6.6.0",
     "rss-parser": "^3.13.0",
     "sanitize-html": "^2.11.0",
     "sharp": "^0.33.1",
