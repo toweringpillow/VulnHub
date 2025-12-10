@@ -135,6 +135,20 @@ export async function POST(request: Request) {
       })
     }
 
+    type ArticleWithTags = {
+      id: number
+      title: string
+      ai_summary: string | null
+      source: string | null
+      published_date: string
+      article_tags: Array<{
+        tag_id: number
+        tags: { id: number; name: string } | null
+      }> | null
+    }
+
+    const typedArticles = articles as ArticleWithTags[]
+
     // Group subscriptions by user
     const userSubscriptions = new Map<string, Array<{ tagId: number; tagName: string; displayName: string }>>()
 
@@ -196,9 +210,9 @@ export async function POST(request: Request) {
       const displayName = tags[0]?.displayName || 'User'
 
       // Find articles that match any of the user's subscribed tags
-      const matchingArticles = articles.filter(article => {
-        const articleTags = (article.article_tags as any[]) || []
-        return articleTags.some((at: any) => {
+      const matchingArticles = typedArticles.filter(article => {
+        const articleTags = article.article_tags || []
+        return articleTags.some((at) => {
           const tagId = at.tags?.id || at.tag_id
           return subscribedTagIds.has(tagId)
         })
@@ -213,7 +227,7 @@ export async function POST(request: Request) {
         ai_summary: article.ai_summary || '',
         source: article.source,
         published_date: article.published_date,
-        tags: ((article.article_tags as any[]) || []).map((at: any) => ({
+        tags: (article.article_tags || []).map((at) => ({
           name: at.tags?.name || 'Unknown',
         })),
       }))
