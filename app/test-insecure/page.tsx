@@ -11,6 +11,8 @@
 import { Metadata } from 'next'
 import { headers } from 'next/headers'
 
+export const dynamic = 'force-dynamic'
+
 export const metadata: Metadata = {
   title: 'Test Environment - VulnerabilityHub',
   description: 'Test environment for security scanning',
