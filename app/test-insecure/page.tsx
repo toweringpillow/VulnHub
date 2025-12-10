@@ -125,16 +125,17 @@ export default async function InsecureTestPage() {
             <li>❌ No rate limiting on this endpoint</li>
           </ul>
 
-          <h2>Test Endpoints</h2>
-          <div style={{ marginTop: '20px' }}>
-            <h3>Debug Information</h3>
-            <ul>
-              <li><a href="/test-insecure/debug">/test-insecure/debug</a> - Exposed debug info</li>
-              <li><a href="/test-insecure/env">/test-insecure/env</a> - Environment variables (sanitized)</li>
-              <li><a href="/test-insecure/headers">/test-insecure/headers</a> - All request headers</li>
-              <li><a href="/test-insecure/error">/test-insecure/error</a> - Error page with stack trace</li>
-            </ul>
-          </div>
+            <h2>Test Endpoints</h2>
+            <div style={{ marginTop: '20px' }}>
+              <h3>Debug Information</h3>
+              <ul>
+                <li><a href="/test-insecure/debug">/test-insecure/debug</a> - Exposed debug info</li>
+                <li><a href="/test-insecure/env">/test-insecure/env</a> - Environment variables (sanitized)</li>
+                <li><a href="/test-insecure/headers">/test-insecure/headers</a> - All request headers</li>
+                <li><a href="/test-insecure/error">/test-insecure/error</a> - Error page with stack trace</li>
+                <li><a href="/api/test-insecure">/api/test-insecure</a> - API endpoint (JSON)</li>
+              </ul>
+            </div>
 
           <h2>Security Headers (Missing)</h2>
           <pre style={{ 

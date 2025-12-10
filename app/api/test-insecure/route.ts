@@ -28,6 +28,7 @@ export async function GET() {
       '/test-insecure/env',
       '/test-insecure/headers',
       '/test-insecure/error',
+      '/api/test-insecure',
     ],
     security: {
       authentication: 'none',
