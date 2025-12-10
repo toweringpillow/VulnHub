@@ -2,7 +2,14 @@
 import { Resend } from 'resend'
 import { CONTACT_EMAIL, SITE_NAME, SITE_URL } from './constants'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
+// Lazy initialization - only create Resend instance when needed
+function getResend() {
+  const apiKey = process.env.RESEND_API_KEY
+  if (!apiKey) {
+    return null
+  }
+  return new Resend(apiKey)
+}
 
 // Email configuration
 const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || `noreply@${SITE_URL?.replace('https://', '').replace('http://', '') || 'vulnerabilityhub.com'}`
@@ -12,7 +19,8 @@ const FROM_NAME = SITE_NAME
  * Send welcome email to new user
  */
 export async function sendWelcomeEmail(to: string, username: string) {
-  if (!process.env.RESEND_API_KEY) {
+  const resend = getResend()
+  if (!resend) {
     console.warn('RESEND_API_KEY not set, skipping welcome email')
     return { success: false, error: 'Email service not configured' }
   }
