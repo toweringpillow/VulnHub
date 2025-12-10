@@ -108,7 +108,8 @@ export async function sendSubscriptionAlert(
   }>,
   subscribedTags: Array<{ name: string }>
 ) {
-  if (!process.env.RESEND_API_KEY) {
+  const resend = getResend()
+  if (!resend) {
     console.warn('RESEND_API_KEY not set, skipping subscription alert')
     return { success: false, error: 'Email service not configured' }
   }
