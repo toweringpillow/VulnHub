@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { ShieldAlert, Search, Loader2 } from 'lucide-react'
+import { ShieldAlert, Search, Loader2, ExternalLink } from 'lucide-react'
 
 interface IOCResult {
   type: string
@@ -184,7 +184,7 @@ export default function IOCLookup() {
               className={`p-4 rounded-lg border ${getStatusColor(result.status)}`}
             >
               <div className="flex items-start justify-between mb-3">
-                <div>
+                <div className="flex-1">
                   <div className="flex items-center space-x-2 mb-1">
                     <span className="text-lg font-bold">{getStatusIcon(result.status)}</span>
                     <span className="text-sm font-medium uppercase">{result.type}</span>
@@ -198,11 +198,108 @@ export default function IOCLookup() {
                 </div>
               </div>
 
-              {result.details && (
+              {result.details && Object.keys(result.details).length > 0 && (
                 <div className="mt-3 pt-3 border-t border-current/20">
-                  <pre className="text-xs text-gray-300 font-mono bg-dark-900/50 p-3 rounded overflow-x-auto">
-                    {JSON.stringify(result.details, null, 2)}
-                  </pre>
+                  {/* CVE-specific formatting */}
+                  {result.type === 'cve' && result.details.id && (
+                    <div className="space-y-3">
+                      {/* CVE Summary Card */}
+                      {result.details.cvssScore !== null && result.details.cvssScore !== undefined && (
+                        <div className="p-3 bg-dark-900/50 rounded-lg">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-sm font-medium text-gray-400">CVSS Score</span>
+                            <span className={`text-lg font-bold ${
+                              result.details.severity === 'CRITICAL' || result.details.severity === 'HIGH'
+                                ? 'text-red-400'
+                                : result.details.severity === 'MEDIUM'
+                                ? 'text-yellow-400'
+                                : 'text-green-400'
+                            }`}>
+                              {result.details.cvssScore} {result.details.cvssVersion ? `(v${result.details.cvssVersion})` : ''}
+                            </span>
+                          </div>
+                          {result.details.severity && (
+                            <div className="text-xs text-gray-400">
+                              Severity: <span className="font-medium text-gray-300">{result.details.severity}</span>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Description */}
+                      {result.details.description && (
+                        <div>
+                          <div className="text-xs font-medium text-gray-400 mb-1">Description</div>
+                          <div className="text-sm text-gray-300">{result.details.description}</div>
+                        </div>
+                      )}
+
+                      {/* Dates */}
+                      <div className="grid grid-cols-2 gap-3 text-xs">
+                        {result.details.published && (
+                          <div>
+                            <div className="text-gray-400 mb-1">Published</div>
+                            <div className="text-gray-300">{new Date(result.details.published as string).toLocaleDateString()}</div>
+                          </div>
+                        )}
+                        {result.details.lastModified && (
+                          <div>
+                            <div className="text-gray-400 mb-1">Last Modified</div>
+                            <div className="text-gray-300">{new Date(result.details.lastModified as string).toLocaleDateString()}</div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* NVD Link */}
+                      {result.details.nvdUrl && (
+                        <div>
+                          <a
+                            href={result.details.nvdUrl as string}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center space-x-1 text-sm text-primary-400 hover:text-primary-300"
+                          >
+                            <span>View on NVD</span>
+                            <ExternalLink className="w-4 h-4" />
+                          </a>
+                        </div>
+                      )}
+
+                      {/* References */}
+                      {result.details.references && Array.isArray(result.details.references) && result.details.references.length > 0 && (
+                        <div>
+                          <div className="text-xs font-medium text-gray-400 mb-2">
+                            References ({result.details.references.length})
+                          </div>
+                          <div className="space-y-1 max-h-40 overflow-y-auto">
+                            {(result.details.references as any[]).slice(0, 5).map((ref: any, refIdx: number) => (
+                              <a
+                                key={refIdx}
+                                href={ref.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="block text-xs text-primary-400 hover:text-primary-300 truncate"
+                              >
+                                {ref.url}
+                              </a>
+                            ))}
+                            {(result.details.references as any[]).length > 5 && (
+                              <div className="text-xs text-gray-500">
+                                +{(result.details.references as any[]).length - 5} more references
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Non-CVE details (fallback to JSON for other types) */}
+                  {result.type !== 'cve' && (
+                    <pre className="text-xs text-gray-300 font-mono bg-dark-900/50 p-3 rounded overflow-x-auto">
+                      {JSON.stringify(result.details, null, 2)}
+                    </pre>
+                  )}
                 </div>
               )}
             </div>

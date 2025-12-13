@@ -68,9 +68,91 @@ export async function GET(request: NextRequest) {
       details: {}
     }
 
-    // If VirusTotal API key is available, use it
     const vtApiKey = process.env.VIRUSTOTAL_API_KEY
-    if (vtApiKey) {
+
+    // Handle CVE lookups using NVD API (free, no API key required)
+    if (type === 'cve') {
+      try {
+        // Validate CVE format
+        const cveRegex = /^CVE-\d{4}-\d+$/i
+        if (!cveRegex.test(value)) {
+          return NextResponse.json(
+            { error: 'Invalid CVE format. Expected format: CVE-YYYY-NNNN' },
+            { status: 400 }
+          )
+        }
+
+        // NVD API v2.0 endpoint
+        const nvdUrl = `https://services.nvd.nist.gov/rest/json/cves/2.0?cveId=${encodeURIComponent(value.toUpperCase())}`
+        const nvdResponse = await fetch(nvdUrl, {
+          headers: {
+            'Accept': 'application/json',
+          }
+        })
+
+        if (nvdResponse.ok) {
+          const nvdData = await nvdResponse.json()
+          
+          if (nvdData.vulnerabilities && nvdData.vulnerabilities.length > 0) {
+            const cve = nvdData.vulnerabilities[0].cve
+            
+            // Determine status based on CVSS score
+            let status = 'unknown'
+            let cvssScore = null
+            let severity = null
+            
+            if (cve.metrics?.cvssMetricV31 && cve.metrics.cvssMetricV31.length > 0) {
+              cvssScore = cve.metrics.cvssMetricV31[0].cvssData.baseScore
+              severity = cve.metrics.cvssMetricV31[0].cvssData.baseSeverity
+            } else if (cve.metrics?.cvssMetricV30 && cve.metrics.cvssMetricV30.length > 0) {
+              cvssScore = cve.metrics.cvssMetricV30[0].cvssData.baseScore
+              severity = cve.metrics.cvssMetricV30[0].cvssData.baseSeverity
+            } else if (cve.metrics?.cvssMetricV2 && cve.metrics.cvssMetricV2.length > 0) {
+              cvssScore = cve.metrics.cvssMetricV2[0].cvssData.baseScore
+              severity = cve.metrics.cvssMetricV2[0].baseSeverity
+            }
+
+            // Map severity to status
+            if (severity) {
+              if (['CRITICAL', 'HIGH'].includes(severity.toUpperCase())) {
+                status = 'malicious'
+              } else if (['MEDIUM'].includes(severity.toUpperCase())) {
+                status = 'suspicious'
+              } else {
+                status = 'clean'
+              }
+            }
+
+            result.status = status
+            result.details = {
+              id: cve.id,
+              published: cve.published,
+              lastModified: cve.lastModified,
+              description: cve.descriptions?.find((d: any) => d.lang === 'en')?.value || 'No description available',
+              cvssScore,
+              severity,
+              cvssVersion: cve.metrics?.cvssMetricV31 ? '3.1' : cve.metrics?.cvssMetricV30 ? '3.0' : cve.metrics?.cvssMetricV2 ? '2.0' : null,
+              references: cve.references?.map((ref: any) => ({
+                url: ref.url,
+                source: ref.source,
+                tags: ref.tags || []
+              })) || [],
+              configurations: cve.configurations || [],
+              nvdUrl: `https://nvd.nist.gov/vuln/detail/${cve.id}`,
+            }
+          } else {
+            result.details = { message: 'CVE not found in NVD database' }
+          }
+        } else {
+          result.details = { message: 'Failed to query NVD API' }
+        }
+      } catch (error) {
+        console.error('NVD API error:', error)
+        result.details = { message: 'Error querying CVE database' }
+      }
+    }
+    // If VirusTotal API key is available, use it for other IOC types
+    else if (vtApiKey) {
       try {
         let endpoint = ''
         if (type === 'ip') {
