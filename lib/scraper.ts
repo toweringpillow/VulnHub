@@ -21,6 +21,51 @@ const parser = new Parser({
   timeout: 30000, // 30 second timeout for RSS feed requests
 })
 
+function normalizePublishedDate(raw: unknown, now: Date): Date {
+  const parsed = typeof raw === 'string' ? new Date(raw) : raw instanceof Date ? raw : null
+  // Invalid date -> fall back to now
+  if (!parsed || Number.isNaN(parsed.getTime())) return now
+
+  // Clamp future dates (bad feed data can pin items to top forever)
+  const maxFutureSkewMs = 36 * 60 * 60 * 1000 // 36 hours
+  if (parsed.getTime() > now.getTime() + maxFutureSkewMs) return now
+
+  return parsed
+}
+
+async function sanitizeFuturePublishedDates(now: Date): Promise<void> {
+  // Repair already-ingested bad rows so they don't pin to the top of the page
+  const maxFutureSkewMs = 36 * 60 * 60 * 1000
+  const futureCutoff = new Date(now.getTime() + maxFutureSkewMs).toISOString()
+
+  const { data: badRows, error } = await supabaseAdmin
+    .from('articles')
+    .select('id, created_at, published_date')
+    .gt('published_date', futureCutoff)
+    .order('published_date', { ascending: false })
+    .limit(200)
+
+  if (error) {
+    console.error('Failed to query future-dated articles:', error)
+    return
+  }
+
+  if (!badRows || badRows.length === 0) return
+
+  console.warn(`Sanitizing ${badRows.length} future-dated article(s)`)
+
+  for (const row of badRows as Array<{ id: number; created_at: string; published_date: string }>) {
+    const newDate = row.created_at || now.toISOString()
+    const { error: updateError } = await (supabaseAdmin.from('articles') as any)
+      .update({ published_date: newDate })
+      .eq('id', row.id)
+
+    if (updateError) {
+      console.error(`Failed to sanitize article ${row.id} published_date=${row.published_date}:`, updateError)
+    }
+  }
+}
+
 /**
  * Company name mappings: lowercase pattern -> normalized display name
  */
@@ -343,6 +388,9 @@ export async function scrapeArticles(): Promise<ScrapeResult> {
     const now = new Date()
     const articleCutoff = new Date(now.getTime() - ARTICLE_CUTOFF_DAYS * 24 * 60 * 60 * 1000)
 
+    // Repair any existing future-dated rows first (prevents pinning)
+    await sanitizeFuturePublishedDates(now)
+
     // Get existing links and hashes to avoid duplicates
     const { data: existingArticles } = await supabaseAdmin
       .from('articles')
@@ -404,9 +452,7 @@ export async function scrapeArticles(): Promise<ScrapeResult> {
           }
 
           // Parse published date
-          const publishedDate = item.pubDate
-            ? new Date(item.pubDate)
-            : now
+          const publishedDate = normalizePublishedDate(item.pubDate, now)
 
           // Skip if too old
           if (publishedDate < articleCutoff) {
