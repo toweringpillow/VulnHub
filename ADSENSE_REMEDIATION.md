@@ -16,8 +16,13 @@ google.com, pub-6273211993737711, DIRECT, f08c47fec0942fa0
 **Next Steps:**
 1. Deploy the changes to production
 2. Verify the file is accessible at: `https://vulnerabilityhub.com/ads.txt`
+3. Ensure `https://vulnerabilityhub.com/ads.txt` returns **HTTP 200** (not a redirect). If your apex domain redirects (e.g. `307/308`) to `www`, AdSense can intermittently report "Not found" even if browsers can follow the redirect.
 3. Wait 2-4 weeks for AdSense to crawl and verify (as per [Google's documentation](https://support.google.com/adsense/answer/12171244))
 4. Check the Ads.txt status in your AdSense dashboard
+
+**Recommended Vercel domain setup (to avoid ads.txt verification issues):**
+- Primary domain: `vulnerabilityhub.com` (Production)
+- Redirect: `www.vulnerabilityhub.com` → `vulnerabilityhub.com` (308/301)
 
 ## 2. Low Value Content Issue - ACTION REQUIRED ⚠️
 

@@ -83,7 +83,8 @@ The following tools work completely without any API keys:
 
 ### IOC Lookup
 - **Without API**: Shows IOC type detection only
-- **With VirusTotal API**: Full threat intelligence lookup
+- **With VirusTotal API**: Full threat intelligence lookup for IPs, domains, URLs, and hashes
+- **CVE support**: CVE enrichment uses the NVD API (no API key required)
 - Supports: IPs, domains, URLs, hashes (MD5, SHA1, SHA256), CVEs
 
 ### DNS Lookup

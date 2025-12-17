@@ -14,7 +14,7 @@
 - 🔄 **Real-Time Updates**: New threats appear instantly via Supabase Realtime subscriptions
 - 🏷️ **Smart Tagging**: Auto-tags threats by OS, vendor, threat type, and severity
 - 🔍 **Advanced Search**: Full-text search across titles, summaries, and tags
-- 📊 **IOC Lookup**: VirusTotal API integration for hash/URL analysis (coming soon)
+- 📊 **IOC Lookup**: IOC enrichment for IPs/domains/URLs/hashes via VirusTotal (optional), and CVE enrichment via NVD (no API key required)
 - 🌍 **World News Ticker**: Stay updated on global cybersecurity events
 - 📱 **Responsive Design**: Optimized for desktop, tablet, and mobile
 - 🔒 **Security First**: Built with security best practices (RLS, CSP, secure headers)
@@ -205,6 +205,8 @@ VulnHub/
 4. **Storage**: Articles saved to Supabase PostgreSQL
 5. **Real-time**: Supabase broadcasts new articles to all connected clients
 6. **Display**: Users see new threats instantly without refresh
+
+**Note:** Published dates from RSS feeds are normalized and guarded against invalid/future-dated values to prevent bad feed metadata from pinning articles to the top.
 
 ## 🛡️ Security Features
 
