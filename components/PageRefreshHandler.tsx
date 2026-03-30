@@ -13,11 +13,16 @@ export default function PageRefreshHandler() {
 
   useEffect(() => {
     const page = parseInt(searchParams.get('page') || '1')
-    
-    // If on page > 1, redirect to page 1 and scroll to top
-    if (page > 1) {
+
+    // Only redirect on a hard reload (not client-side navigation).
+    const navEntry = performance.getEntriesByType('navigation')[0] as
+      | PerformanceNavigationTiming
+      | undefined
+    const isReload = navEntry?.type === 'reload'
+
+    if (page > 1 && isReload) {
       router.replace('/')
-      window.scrollTo({ top: 0, behavior: 'instant' })
+      window.scrollTo({ top: 0, behavior: 'auto' })
     }
   }, [searchParams, router])
 
