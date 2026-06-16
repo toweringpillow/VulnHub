@@ -1,6 +1,7 @@
 import { supabaseAdmin } from './supabase/admin'
 import { sendAlert } from './alerts'
 import { ScrapeResult } from '@/types'
+import type { Article, ScrapeRun } from '@/types/database'
 
 const STALE_HOURS = parseInt(process.env.ARTICLE_STALE_HOURS || '24', 10)
 
@@ -34,7 +35,8 @@ export async function getFeedHealth(): Promise<FeedHealth> {
     .order('created_at', { ascending: false })
     .limit(1)
 
-  const lastArticleAt = latestRows?.[0]?.created_at ?? null
+  const lastArticleAt =
+    (latestRows as Pick<Article, 'created_at'>[] | null)?.[0]?.created_at ?? null
   const hoursSinceLastArticle = lastArticleAt
     ? (Date.now() - new Date(lastArticleAt).getTime()) / (1000 * 60 * 60)
     : null
@@ -204,10 +206,15 @@ export async function getRecentScrapeStats(hours = 24): Promise<{
     return { runs: 0, totalAdded: 0, totalErrors: 0, lastRunAt: null }
   }
 
+  const rows = data as Pick<ScrapeRun, 'articles_added' | 'errors' | 'ran_at'>[]
+
   return {
-    runs: data.length,
-    totalAdded: data.reduce((sum, row) => sum + (row.articles_added ?? 0), 0),
-    totalErrors: data.reduce((sum, row) => sum + ((row.errors as string[])?.length ?? 0), 0),
-    lastRunAt: data[0]?.ran_at ?? null,
+    runs: rows.length,
+    totalAdded: rows.reduce((sum, row) => sum + (row.articles_added ?? 0), 0),
+    totalErrors: rows.reduce(
+      (sum, row) => sum + ((row.errors as string[])?.length ?? 0),
+      0
+    ),
+    lastRunAt: rows[0]?.ran_at ?? null,
   }
 }
