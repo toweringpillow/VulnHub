@@ -66,21 +66,11 @@ export async function POST(request: Request) {
     }
   } catch (error) {
     console.error('World news scraper error:', error)
-    return NextResponse.json(
-      {
-        error: 'Scraping failed',
-        message: error instanceof Error ? error.message : 'Unknown error',
-      },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Scraping failed' }, { status: 500 })
   }
 }
 
 export async function GET() {
-  return NextResponse.json({
-    status: 'ok',
-    endpoint: 'world-news',
-    message: 'Use POST with Authorization header',
-  })
+  return NextResponse.json({ error: 'Method not allowed' }, { status: 405 })
 }
 

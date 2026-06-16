@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createServerClient } from '@/lib/supabase/server'
 import { DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE } from '@/lib/constants'
+import { sanitizePostgrestFilter } from '@/lib/utils'
 
 // Mark as dynamic route
 export const dynamic = 'force-dynamic'
@@ -40,10 +41,11 @@ export async function GET(request: Request) {
       .order('published_date', { ascending: false })
 
     // Apply filters
-    if (query && query.length >= 2) { // Minimum 2 characters for search
-      // Escape special characters for Supabase ilike
-      const escapedQuery = query.replace(/[%_\\]/g, '\\$&')
-      dbQuery = dbQuery.or(`title.ilike.%${escapedQuery}%,ai_summary.ilike.%${escapedQuery}%`)
+    if (query && query.length >= 2) {
+      const safeQuery = sanitizePostgrestFilter(query)
+      if (safeQuery) {
+        dbQuery = dbQuery.or(`title.ilike.%${safeQuery}%,ai_summary.ilike.%${safeQuery}%`)
+      }
     }
 
     if (source) {

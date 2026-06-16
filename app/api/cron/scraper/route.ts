@@ -60,32 +60,14 @@ export async function POST(request: Request) {
       )
     } catch (scrapeError) {
       console.error('Scrape failed:', scrapeError)
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'Scraping failed',
-          message: scrapeError instanceof Error ? scrapeError.message : 'Unknown error',
-          timestamp: new Date().toISOString(),
-        },
-        { status: 500 }
-      )
+      return NextResponse.json({ error: 'Scraping failed' }, { status: 500 })
     }
   } catch (error) {
     console.error('Cron scraper error:', error)
-    return NextResponse.json(
-      {
-        error: 'Scraping failed',
-        message: error instanceof Error ? error.message : 'Unknown error',
-      },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Scraping failed' }, { status: 500 })
   }
 }
 
 export async function GET() {
-  return NextResponse.json({
-    status: 'ok',
-    endpoint: 'scraper',
-    message: 'Use POST with Authorization header',
-  })
+  return NextResponse.json({ error: 'Method not allowed' }, { status: 405 })
 }

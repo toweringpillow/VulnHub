@@ -48,13 +48,7 @@ export async function POST() {
     })
   } catch (error) {
     console.error('Health check error:', error)
-    return NextResponse.json(
-      {
-        error: 'Health check failed',
-        message: error instanceof Error ? error.message : 'Unknown error',
-      },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Health check failed' }, { status: 500 })
   }
 }
 
@@ -73,12 +67,6 @@ export async function GET() {
       timestamp: new Date().toISOString(),
     })
   } catch (error) {
-    return NextResponse.json(
-      {
-        error: 'Health check failed',
-        message: error instanceof Error ? error.message : 'Unknown error',
-      },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Health check failed' }, { status: 500 })
   }
 }
