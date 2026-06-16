@@ -145,6 +145,12 @@ jobs:
           # Check if request was successful
           if [ "$http_code" -ge 200 ] && [ "$http_code" -lt 300 ]; then
             echo "✅ Scraper completed successfully (HTTP $http_code)"
+            articles_added=$(echo "$body" | grep -o '"articlesAdded":[0-9]*' | head -1 | cut -d: -f2 || echo "")
+            articles_processed=$(echo "$body" | grep -o '"articlesProcessed":[0-9]*' | head -1 | cut -d: -f2 || echo "")
+            if [ -n "$articles_processed" ] && [ "$articles_processed" -gt 20 ] && [ "$articles_added" = "0" ]; then
+              echo "::warning::Scraper processed $articles_processed items but added 0 articles. Feed may be stale or filters too aggressive."
+            fi
+
             # Try to extract article counts from response if available
             if echo "$body" | grep -q "articlesAdded"; then
               processed=$(echo "$body" | grep -o '"articlesProcessed":[0-9]*' | cut -d: -f2 || echo "unknown")

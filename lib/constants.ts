@@ -230,6 +230,7 @@ export const DUPLICATE_CHECK_HOURS = 48
 export const DEDUPLICATION_WINDOW_DAYS = parseInt(process.env.DEDUPLICATION_WINDOW_DAYS || '2', 10)
 
 // Keywords to filter out sponsored posts, deals, and advertisements
+// Matched with word boundaries in lib/content-filter.ts
 export const SPONSORED_KEYWORDS = [
   // Deal/Promotion keywords
   'black friday',
@@ -241,7 +242,6 @@ export const SPONSORED_KEYWORDS = [
   'discounts',
   '% off',
   'percent off',
-  'save',
   'sale',
   'promo',
   'promotion',
@@ -264,8 +264,6 @@ export const SPONSORED_KEYWORDS = [
   'affiliate link',
   'affiliate',
   'partner content',
-  'ad',
-  'ads',
   
   // Product promotion keywords (common in cybersecurity feeds)
   'vpn deal',

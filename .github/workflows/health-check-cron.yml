@@ -1,0 +1,58 @@
+name: Feed Health Check
+
+on:
+  schedule:
+    # Run daily at 9:00 AM UTC
+    - cron: '0 9 * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: health-check-cron
+  cancel-in-progress: false
+
+jobs:
+  health-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check feed health
+        run: |
+          URL="${{ vars.SCRAPER_URL }}"
+
+          if [[ -z "$URL" ]]; then
+            echo "ERROR: SCRAPER_URL variable is not set"
+            exit 1
+          fi
+
+          if [[ ! "$URL" =~ ^https?:// ]]; then
+            URL="https://$URL"
+          fi
+
+          echo "Checking feed health at ${URL}/api/cron/health-check"
+
+          response=$(curl --location-trusted -X POST \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            -H "Content-Type: application/json" \
+            -w "\nHTTP_CODE:%{http_code}" \
+            --connect-timeout 10 \
+            --max-time 30 \
+            "${URL}/api/cron/health-check" 2>&1)
+
+          http_code=$(echo "$response" | grep -o "HTTP_CODE:[0-9]*" | cut -d: -f2 || echo "000")
+          body=$(echo "$response" | grep -v "HTTP_CODE:" | tail -20)
+
+          echo "HTTP Code: ${http_code}"
+          echo "Response:"
+          echo "$body"
+
+          if [ "$http_code" -lt 200 ] || [ "$http_code" -ge 300 ]; then
+            echo "Health check request failed"
+            exit 1
+          fi
+
+          # Warn in GitHub Actions log if feed is stale
+          if echo "$body" | grep -q '"isStale":true'; then
+            echo "::warning::VulnHub feed is stale — no new articles in 24+ hours. Check Vercel logs and ALERT_WEBHOOK_URL."
+          fi
+
+          echo "Health check completed"

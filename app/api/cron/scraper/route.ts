@@ -1,57 +1,42 @@
 import { NextResponse } from 'next/server'
 
 export const runtime = 'nodejs'
-export const maxDuration = 300 // 300 seconds (5 minutes) timeout for scraping multiple feeds
+export const maxDuration = 300
 
-/**
- * Cron endpoint for RSS scraping
- * Called by external cron service (GitHub Actions, cron-job.org, etc.)
- * Protected by Authorization header with CRON_SECRET
- */
 export async function POST(request: Request) {
   try {
-    // Get auth header directly from request to avoid potential blocking
     const authHeader = request.headers.get('authorization')
     const cronSecret = process.env.CRON_SECRET
 
-    // Quick auth check - return immediately if invalid
     if (!cronSecret) {
-      return NextResponse.json(
-        { error: 'Server misconfigured' },
-        { status: 500 }
-      )
+      return NextResponse.json({ error: 'Server misconfigured' }, { status: 500 })
     }
 
     const expectedAuth = `Bearer ${cronSecret}`
     if (authHeader !== expectedAuth) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Import and run scraping - await to ensure it completes before function terminates
-    // On serverless platforms, returning early can terminate the execution context
     console.log('Starting article scraping...')
-    
+    const startedAt = Date.now()
+
     try {
       const { scrapeArticles } = await import('@/lib/scraper')
       const result = await scrapeArticles()
-      
-      console.log('Scrape completed successfully', {
-        articlesProcessed: result.articlesProcessed,
-        articlesAdded: result.articlesAdded,
-        articlesSkipped: result.articlesSkipped,
-      })
+      const durationMs = Date.now() - startedAt
 
-      // Trigger email alerts if new articles were added
+      console.log(
+        `[CRON] Scrape finished in ${durationMs}ms — added: ${result.articlesAdded}, skipped: ${result.articlesSkipped}, processed: ${result.articlesProcessed}, errors: ${result.errors.length}`
+      )
+      if (result.skippedReasons) {
+        console.log('[CRON] Skip breakdown:', JSON.stringify(result.skippedReasons))
+      }
+
       if (result.articlesAdded > 0 && result.newArticleIds && result.newArticleIds.length > 0) {
         try {
           const siteUrl = process.env.SITE_URL || process.env.NEXT_PUBLIC_SITE_URL || process.env.VERCEL_URL || 'http://localhost:3000'
           const alertUrl = `${siteUrl}/api/email/send-alerts?secret=${cronSecret}&articleIds=${result.newArticleIds.join(',')}`
-          
-          // Call alert endpoint asynchronously (don't wait for it)
-          fetch(alertUrl, { method: 'POST' }).catch(err => {
+          fetch(alertUrl, { method: 'POST' }).catch((err) => {
             console.error('Failed to trigger email alerts:', err)
           })
         } catch (alertError) {
@@ -66,6 +51,8 @@ export async function POST(request: Request) {
           articlesProcessed: result.articlesProcessed,
           articlesAdded: result.articlesAdded,
           articlesSkipped: result.articlesSkipped,
+          skippedReasons: result.skippedReasons,
+          durationMs,
           errors: result.errors.length > 0 ? result.errors : undefined,
           timestamp: new Date().toISOString(),
         },
@@ -95,7 +82,6 @@ export async function POST(request: Request) {
   }
 }
 
-// Health check endpoint
 export async function GET() {
   return NextResponse.json({
     status: 'ok',
@@ -103,4 +89,3 @@ export async function GET() {
     message: 'Use POST with Authorization header',
   })
 }
-

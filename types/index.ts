@@ -41,6 +41,12 @@ export interface ScrapeResult {
   articlesSkipped: number
   errors: string[]
   newArticleIds?: number[] // IDs of newly added articles (for email alerts)
+  skippedReasons?: {
+    duplicate: number
+    tooOld: number
+    sponsored: number
+    missingFields: number
+  }
 }
 
 // Search/filter types
@@ -72,7 +78,7 @@ export interface PaginatedResponse<T> {
 }
 
 // API Response types
-export interface APIResponse<T = any> {
+export interface APIResponse<T = unknown> {
   success: boolean
   data?: T
   error?: string

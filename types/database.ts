@@ -165,6 +165,38 @@ export interface Database {
           created_at?: string
         }
       }
+      scrape_runs: {
+        Row: {
+          id: number
+          scrape_type: 'articles' | 'world_news' | 'health_check'
+          articles_processed: number
+          articles_added: number
+          articles_skipped: number
+          errors: Json
+          metadata: Json | null
+          ran_at: string
+        }
+        Insert: {
+          id?: number
+          scrape_type: 'articles' | 'world_news' | 'health_check'
+          articles_processed?: number
+          articles_added?: number
+          articles_skipped?: number
+          errors?: Json
+          metadata?: Json | null
+          ran_at?: string
+        }
+        Update: {
+          id?: number
+          scrape_type?: 'articles' | 'world_news' | 'health_check'
+          articles_processed?: number
+          articles_added?: number
+          articles_skipped?: number
+          errors?: Json
+          metadata?: Json | null
+          ran_at?: string
+        }
+      }
     }
     Views: {
       [_ in never]: never
@@ -178,15 +210,14 @@ export interface Database {
   }
 }
 
-// Helper types
 export type Article = Database['public']['Tables']['articles']['Row']
 export type ArticleInsert = Database['public']['Tables']['articles']['Insert']
 export type Tag = Database['public']['Tables']['tags']['Row']
 export type Profile = Database['public']['Tables']['profiles']['Row']
 export type Subscription = Database['public']['Tables']['subscriptions']['Row']
 export type WorldNews = Database['public']['Tables']['world_news']['Row']
+export type ScrapeRun = Database['public']['Tables']['scrape_runs']['Row']
 
-// Extended types with relationships
 export type ArticleWithTags = Article & {
   article_tags: Array<{
     tag_id: number
@@ -200,4 +231,3 @@ export type ProfileWithSubscriptions = Profile & {
     tags: Tag
   }>
 }
-

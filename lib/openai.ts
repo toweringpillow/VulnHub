@@ -9,6 +9,15 @@ const openai = new OpenAI({
 const AI_MODEL = process.env.AI_MODEL || 'gpt-4o-mini'
 const ENABLE_AI = process.env.ENABLE_AI === 'true'
 
+export type AnalyzeOutcome =
+  | { status: 'success'; data: AIAnalysisResult }
+  | { status: 'sponsored' }
+  | { status: 'unavailable'; reason: string }
+
+export function isAiEnabled(): boolean {
+  return ENABLE_AI && !!process.env.OPENAI_API_KEY
+}
+
 /**
  * Analyze cybersecurity article with OpenAI
  */
@@ -18,31 +27,28 @@ export async function analyzeArticle(
   summary: string,
   hasCVE: boolean = false,
   hasInWildTag: boolean = false
-): Promise<AIAnalysisResult | null> {
-  if (!ENABLE_AI || !process.env.OPENAI_API_KEY) {
-    console.warn('AI analysis disabled or API key missing')
-    return null
+): Promise<AnalyzeOutcome> {
+  if (!isAiEnabled()) {
+    return { status: 'unavailable', reason: 'AI disabled or API key missing' }
   }
 
   try {
-    // Clean and truncate summary if needed
     const cleanedSummary = summary.replace(/<[^>]*>/g, '').slice(0, 7000)
 
-    // Detect CVE in title/summary if not already detected
     const cvePattern = /CVE-\d{4}-\d+/i
     const hasCVEDetected = hasCVE || cvePattern.test(title) || cvePattern.test(cleanedSummary)
 
-    // Build enhanced prompt for critical vulnerabilities
-    const criticalContext = (hasCVEDetected || hasInWildTag) 
-      ? `\n\n**CRITICAL: This article mentions a CVE (${hasCVEDetected ? 'YES' : 'NO'}) or is tagged as "In the Wild" (${hasInWildTag ? 'YES' : 'NO'}). 
+    const criticalContext =
+      hasCVEDetected || hasInWildTag
+        ? `\n\n**CRITICAL: This article mentions a CVE (${hasCVEDetected ? 'YES' : 'NO'}) or is tagged as "In the Wild" (${hasInWildTag ? 'YES' : 'NO'}). 
 You MUST provide detailed Impact and Remediation information. 
 - For Impact: List ALL affected products, systems, versions, and vendors mentioned. Be comprehensive.
 - For Remediation: Extract ALL remediation steps, patches, updates, workarounds, or mitigation strategies mentioned. 
   If patches are available, include patch numbers/versions. If workarounds exist, describe them.
   If the article doesn't explicitly mention remediation, infer reasonable remediation steps based on the vulnerability type.
   DO NOT use "Not specified" unless absolutely no remediation information can be found or inferred.
-- Be thorough and professional - cybersecurity professionals rely on this information.` 
-      : ''
+- Be thorough and professional - cybersecurity professionals rely on this information.`
+        : ''
 
     const prompt = `Article Title: ${title}
 Article Content:
@@ -86,45 +92,40 @@ If this is a legitimate cybersecurity article about threats, vulnerabilities, br
 
     if (!content) {
       console.error('OpenAI returned empty response')
-      return null
+      return { status: 'unavailable', reason: 'empty response' }
     }
 
-    // Parse JSON response
     const parsed = JSON.parse(content) as AIAnalysisResult
 
-    // Check if article is sponsored/promotional
     if (parsed.is_sponsored === true) {
-      console.log('OpenAI detected sponsored/promotional content')
-      return null // Return null to skip this article
+      console.log('OpenAI detected sponsored/promotional content:', title)
+      return { status: 'sponsored' }
     }
 
-    // Validate required fields
-    if (!parsed.ai_summary || !parsed.ai_summary.trim()) {
+    if (!parsed.ai_summary?.trim()) {
       console.error('OpenAI response missing ai_summary')
-      return null
+      return { status: 'unavailable', reason: 'missing ai_summary' }
     }
 
-    // Normalize in_wild field
     if (parsed.in_wild && !['Yes', 'No', 'Unknown'].includes(parsed.in_wild)) {
       parsed.in_wild = 'Unknown'
     }
 
-    return parsed
+    return { status: 'success', data: parsed }
   } catch (error) {
     console.error('OpenAI analysis failed:', error)
-    return null
+    return {
+      status: 'unavailable',
+      reason: error instanceof Error ? error.message : 'unknown error',
+    }
   }
 }
 
-/**
- * Retry failed AI analysis for an article
- */
 export async function retryFailedAnalysis(
   articleId: number,
   title: string,
   originalSummary: string
-): Promise<AIAnalysisResult | null> {
+): Promise<AnalyzeOutcome> {
   console.log(`Retrying AI analysis for article ${articleId}`)
   return analyzeArticle(title, '', originalSummary)
 }
-

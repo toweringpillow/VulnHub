@@ -3,6 +3,8 @@ import Parser from 'rss-parser'
 import { supabaseAdmin } from './supabase/admin'
 import { analyzeArticle } from './openai'
 import { generateContentHash, stripHtml } from './utils'
+import { isSponsoredContent } from './content-filter'
+import { alertScrapeAnomalies, logScrapeRun } from './monitoring'
 import {
   ARTICLE_FEEDS,
   MAX_ARTICLES_PER_RUN,
@@ -381,6 +383,12 @@ export async function scrapeArticles(): Promise<ScrapeResult> {
     articlesSkipped: 0,
     errors: [],
     newArticleIds: [],
+    skippedReasons: {
+      duplicate: 0,
+      tooOld: 0,
+      sponsored: 0,
+      missingFields: 0,
+    },
   }
 
   try {
@@ -443,11 +451,16 @@ export async function scrapeArticles(): Promise<ScrapeResult> {
           const link = item.link?.trim()
           const title = item.title?.trim()
 
-          if (!link || !title) continue
+          if (!link || !title) {
+            result.articlesSkipped++
+            result.skippedReasons!.missingFields++
+            continue
+          }
 
           // Check if already exists
           if (existingLinks.has(link)) {
             result.articlesSkipped++
+            result.skippedReasons!.duplicate++
             continue
           }
 
@@ -457,6 +470,7 @@ export async function scrapeArticles(): Promise<ScrapeResult> {
           // Skip if too old
           if (publishedDate < articleCutoff) {
             result.articlesSkipped++
+            result.skippedReasons!.tooOld++
             continue
           }
 
@@ -467,19 +481,15 @@ export async function scrapeArticles(): Promise<ScrapeResult> {
           const contentHash = await generateContentHash(`${title}|${summary.slice(0, 700)}`)
           if (existingHashes.has(contentHash)) {
             result.articlesSkipped++
+            result.skippedReasons!.duplicate++
             existingLinks.add(link) // Mark as seen
             continue
           }
 
-          // Filter out sponsored posts, deals, and advertisements
-          const combinedText = `${title} ${summary}`.toLowerCase()
-          const isSponsored = SPONSORED_KEYWORDS.some((keyword) =>
-            combinedText.includes(keyword.toLowerCase())
-          )
-
-          if (isSponsored) {
-            console.log(`Filtered out sponsored/advertisement: ${title}`)
+          if (isSponsoredContent(title, summary)) {
+            console.log(`Filtered sponsored content (keywords): ${title}`)
             result.articlesSkipped++
+            result.skippedReasons!.sponsored++
             continue
           }
 
@@ -489,14 +499,19 @@ export async function scrapeArticles(): Promise<ScrapeResult> {
           const searchTextLower = `${title} ${summary}`.toLowerCase()
           const hasInWildTag = /in the wild|actively exploited|active exploitation|zero-day exploit/i.test(searchTextLower)
 
-          // Analyze with AI (pass context about CVE/In the Wild)
-          const aiResult = await analyzeArticle(title, link, summary, hasCVE, hasInWildTag)
+          const aiOutcome = await analyzeArticle(title, link, summary, hasCVE, hasInWildTag)
 
-          // Skip if AI detected sponsored content
-          if (!aiResult) {
-            console.log(`Skipping article (sponsored/promotional detected): ${title}`)
+          if (aiOutcome.status === 'sponsored') {
+            console.log(`Filtered sponsored content (AI): ${title}`)
             result.articlesSkipped++
+            result.skippedReasons!.sponsored++
             continue
+          }
+
+          const aiResult = aiOutcome.status === 'success' ? aiOutcome.data : null
+
+          if (aiOutcome.status === 'unavailable') {
+            console.warn(`AI unavailable for "${title}": ${aiOutcome.reason} — inserting without AI summary`)
           }
 
           // Check for duplicate breach/vulnerability within the deduplication window (e.g., 2 days)
@@ -511,6 +526,7 @@ export async function scrapeArticles(): Promise<ScrapeResult> {
           if (isDuplicateInDB) {
             console.log(`Skipping duplicate article within ${DEDUPLICATION_WINDOW_DAYS}-day window (in DB): ${title}`)
             result.articlesSkipped++
+            result.skippedReasons!.duplicate++
             continue
           }
           
@@ -532,6 +548,7 @@ export async function scrapeArticles(): Promise<ScrapeResult> {
                 if (areSignaturesSimilar(articleSignature, batchItem.signature)) {
                   console.log(`Skipping duplicate article within ${DEDUPLICATION_WINDOW_DAYS}-day window (in batch): "${title}" matches "${batchItem.title}"`)
                   result.articlesSkipped++
+                  result.skippedReasons!.duplicate++
                   isDuplicateInBatch = true
                   break
                 }
@@ -613,7 +630,7 @@ export async function scrapeArticles(): Promise<ScrapeResult> {
             in_wild: aiResult.in_wild || null,
             age: aiResult.age || null,
             remediation: aiResult.remediation || null,
-            ai_retry_count: 0, // Successfully analyzed
+            ai_retry_count: aiResult ? 0 : 1,
           }
 
           newArticles.push({ article, tags: articleTags })
@@ -867,10 +884,21 @@ export async function scrapeWorldNews(): Promise<number> {
       console.warn('No headlines to save after filtering')
     }
 
+    await logScrapeRun({
+      scrape_type: 'world_news',
+      articles_processed: data.articles?.length ?? 0,
+      articles_added: headlines.length,
+      articles_skipped: (data.articles?.length ?? 0) - headlines.length,
+      errors: [],
+    })
+
     return headlines.length
   } catch (error) {
     console.error('Error scraping world news:', error)
     return 0
   }
 }
+
+// Re-export for tests
+export { isSponsoredContent, SPONSORED_KEYWORDS }
 
