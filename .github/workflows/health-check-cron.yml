@@ -11,6 +11,14 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  keepalive:
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+    steps:
+      - uses: liskin/gh-workflow-keepalive@v1
+
   health-check:
     runs-on: ubuntu-latest
     timeout-minutes: 5
