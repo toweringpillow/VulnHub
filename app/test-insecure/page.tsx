@@ -10,6 +10,8 @@
 
 import { Metadata } from 'next'
 import { headers } from 'next/headers'
+import { notFound } from 'next/navigation'
+import { isInsecureTestEnabled } from '@/lib/insecure-test'
 
 export const dynamic = 'force-dynamic'
 
@@ -27,17 +29,8 @@ export const metadata: Metadata = {
 }
 
 export default async function InsecureTestPage() {
-  // Check if insecure test is enabled
-  const isEnabled = process.env.ENABLE_INSECURE_TEST === 'true'
-  
-  if (!isEnabled) {
-    return (
-      <div style={{ padding: '20px', fontFamily: 'monospace' }}>
-        <h1>Test Environment Disabled</h1>
-        <p>This test environment is currently disabled.</p>
-        <p>Set ENABLE_INSECURE_TEST=true to enable.</p>
-      </div>
-    )
+  if (!isInsecureTestEnabled()) {
+    notFound()
   }
 
   const headersList = await headers()

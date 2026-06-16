@@ -58,7 +58,6 @@ export async function POST(request: Request) {
         {
           success: false,
           error: 'Scraping failed',
-          message: scrapeError instanceof Error ? scrapeError.message : 'Unknown error',
           timestamp: new Date().toISOString(),
         },
         { status: 500 }

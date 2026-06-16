@@ -4,14 +4,14 @@
  */
 
 import { headers } from 'next/headers'
+import { notFound } from 'next/navigation'
+import { isInsecureTestEnabled } from '@/lib/insecure-test'
 
 export const dynamic = 'force-dynamic'
 
 export default async function HeadersPage() {
-  const isEnabled = process.env.ENABLE_INSECURE_TEST === 'true'
-  
-  if (!isEnabled) {
-    return <div>Test environment disabled</div>
+  if (!isInsecureTestEnabled()) {
+    notFound()
   }
 
   const headersList = await headers()

@@ -34,9 +34,15 @@ export async function POST(request: Request) {
 
       if (result.articlesAdded > 0 && result.newArticleIds && result.newArticleIds.length > 0) {
         try {
-          const siteUrl = process.env.SITE_URL || process.env.NEXT_PUBLIC_SITE_URL || process.env.VERCEL_URL || 'http://localhost:3000'
-          const alertUrl = `${siteUrl}/api/email/send-alerts?secret=${cronSecret}&articleIds=${result.newArticleIds.join(',')}`
-          fetch(alertUrl, { method: 'POST' }).catch((err) => {
+          const siteUrl =
+            process.env.SITE_URL ||
+            process.env.NEXT_PUBLIC_SITE_URL ||
+            (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')
+          const alertUrl = `${siteUrl}/api/email/send-alerts?articleIds=${result.newArticleIds.join(',')}`
+          fetch(alertUrl, {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${cronSecret}` },
+          }).catch((err) => {
             console.error('Failed to trigger email alerts:', err)
           })
         } catch (alertError) {

@@ -4,25 +4,16 @@ import { sendSubscriptionAlert } from '@/lib/email'
 
 /**
  * POST /api/email/send-alerts
- * Send subscription alerts for new articles
- * This should be called after new articles are added (via cron job)
- * 
- * Query params:
- * - secret: CRON_SECRET for authentication
- * - articleIds: Comma-separated list of article IDs to check (optional, checks recent if not provided)
+ * Send subscription alerts for new articles (called after scraping).
+ * Requires Authorization: Bearer <CRON_SECRET>
  */
 export async function POST(request: Request) {
   try {
-    // Verify cron secret
-    const { searchParams } = new URL(request.url)
-    const secret = searchParams.get('secret')
     const cronSecret = process.env.CRON_SECRET
-    
-    if (!cronSecret || secret !== cronSecret) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
+    const authHeader = request.headers.get('authorization')
+
+    if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     // Check if email is configured
@@ -34,11 +25,16 @@ export async function POST(request: Request) {
     }
 
     // Get article IDs from query params or fetch recent articles
+    const { searchParams } = new URL(request.url)
     const articleIdsParam = searchParams.get('articleIds')
     let articleIds: number[] = []
 
     if (articleIdsParam) {
-      articleIds = articleIdsParam.split(',').map(id => parseInt(id.trim())).filter(id => !isNaN(id))
+      articleIds = articleIdsParam
+        .split(',')
+        .map((id) => parseInt(id.trim(), 10))
+        .filter((id) => !isNaN(id))
+        .slice(0, 50)
     } else {
       // Get articles from last hour
       const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString()
@@ -251,14 +247,15 @@ export async function POST(request: Request) {
       success: true,
       message: `Processed ${articleIds.length} articles`,
       alertsSent,
-      errors: errors.length > 0 ? errors : undefined,
+      errors: errors.length > 0 ? errors.length : undefined,
     })
   } catch (error) {
     console.error('Error in send-alerts:', error)
-    return NextResponse.json(
-      { error: 'Internal server error', details: String(error) },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
+}
+
+export async function GET() {
+  return NextResponse.json({ error: 'Method not allowed' }, { status: 405 })
 }
 

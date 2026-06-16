@@ -5,14 +5,13 @@
 
 import { NextResponse } from 'next/server'
 import { headers } from 'next/headers'
+import { isInsecureTestEnabled } from '@/lib/insecure-test'
 
 export const dynamic = 'force-dynamic'
 
 export async function GET() {
-  const isEnabled = process.env.ENABLE_INSECURE_TEST === 'true'
-  
-  if (!isEnabled) {
-    return NextResponse.json({ error: 'Test environment disabled' }, { status: 403 })
+  if (!isInsecureTestEnabled()) {
+    return NextResponse.json({ error: 'Not found' }, { status: 404 })
   }
 
   const headersList = await headers()

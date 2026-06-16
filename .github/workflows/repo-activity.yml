@@ -1,0 +1,26 @@
+name: Repo activity heartbeat
+
+on:
+  schedule:
+    # 1st of each month at noon UTC — keeps public repo active for GitHub scheduled workflows
+    - cron: '0 12 1 * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  heartbeat:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Update activity timestamp
+        run: date -u +%Y-%m-%dT%H:%MZ > .github/last-activity
+
+      - uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: chore: monthly repository activity heartbeat
+          file_pattern: .github/last-activity
+          commit_user_name: github-actions[bot]
+          commit_user_email: 41898282+github-actions[bot]@users.noreply.github.com
